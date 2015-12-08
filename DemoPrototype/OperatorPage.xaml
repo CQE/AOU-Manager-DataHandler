@@ -10,12 +10,15 @@
 
     <Grid Margin="10,0,0,0" >
         <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height ="50"></RowDefinition>
+            <RowDefinition Height="15"></RowDefinition>
+            <RowDefinition Height ="40"></RowDefinition>
+            <RowDefinition Height ="40"></RowDefinition>
+            <RowDefinition Height ="40" ></RowDefinition>
+            <RowDefinition Height ="40"></RowDefinition>
+            <RowDefinition Height ="40"></RowDefinition>
+            <RowDefinition Height ="40"></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
@@ -39,7 +42,6 @@
             <ComboBoxItem Content="Fixed Cycling"></ComboBoxItem>
             <ComboBoxItem Content="Auto with IMM"></ComboBoxItem>
         </ComboBox>
-        <TextBlock Grid.Row="1" Grid.Column="2" Text="Selection should show dialog box for change acceptance"></TextBlock>
         <TextBlock Grid.Row="2" VerticalAlignment="Bottom" Text="Set Runtime Parameters"></TextBlock>
         <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Bottom">
             <TextBlock Text="T Hot Tank ( T"></TextBlock>
@@ -52,32 +54,55 @@
         <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox IsReadOnly="True" BorderThickness="0" Background="White" Text="210"></TextBox>
             <TextBox Margin="10,0,0,0" Text="220"></TextBox>
-            <TextBlock Text="Degrees Celcius" Margin="5,0,0,0 "></TextBlock>
+            <TextBlock Text="Degrees C" Margin="5,0,0,0 "></TextBlock>
         </StackPanel>
         <Slider Grid.Row="3" Grid.Column="2" VerticalAlignment="Bottom" Value="240" Maximum="250" Visibility="Collapsed"></Slider>
         <TextBlock Grid.Row="4" VerticalAlignment="Bottom" Text="T Cold Tank (T Actual, T Set)"></TextBlock>
         <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox Text="20"></TextBox>
             <TextBox Margin="10,0,0,0" Text="25"></TextBox>
+            <TextBlock Margin="5,0,0,0 " Text="Degrees C"></TextBlock>
         </StackPanel>
         <Slider Grid.Row="4" Grid.Column="2" Value="40" Maximum="250" Visibility="Collapsed"></Slider>
         <TextBlock Grid.Row="5"  VerticalAlignment="Bottom" Text="Set Heating Time "></TextBlock>
-        <TextBox Grid.Row="5" Grid.Column="1" VerticalAlignment="Bottom" Text="20"></TextBox>
-        <Slider Grid.Row="5" Grid.Column="2" Value="20" Maximum="100" Visibility="Collapsed"></Slider>
-        <TextBlock Grid.Row="6" VerticalAlignment="Bottom" Text="Set Cooling Time"></TextBlock>
-        <TextBox Grid.Row="6" Grid.Column="1" VerticalAlignment="Bottom" Text="20"></TextBox>
-        <Slider Grid.Row="6" Grid.Column="2" Value="20" Maximum="100" Visibility="Collapsed"></Slider>
-        <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Button  Content="Button1"></Button>
-            <Button Margin="0,10,0,0" Content="Button2"></Button>
+        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <TextBox VerticalAlignment="Bottom" Text="22"></TextBox>
+            <TextBlock Margin="5,0,0,0" Text="s"></TextBlock>
+        </StackPanel>
+        <Slider Grid.Row="5" Grid.Column="2" Value="25" Maximum="100" Visibility="Collapsed"></Slider>
+      
+        <TextBlock Grid.Row="6"  VerticalAlignment="Bottom" Text="Set Heating Pause "></TextBlock>
+        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <TextBox VerticalAlignment="Bottom" Text="26"></TextBox>
+            <TextBlock Margin="5,0,0,0" Text="s"></TextBlock>
+        </StackPanel>
+        <Slider Grid.Row="6" Grid.Column="2" Value="27" Maximum="100" Visibility="Collapsed"></Slider>
+       
+        <TextBlock Grid.Row="7" VerticalAlignment="Bottom" Text="Set Cooling Time"></TextBlock>
+        <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <TextBox VerticalAlignment="Bottom" Text="24"></TextBox>
+            <TextBlock Margin="5,0,0,0" Text="s"></TextBlock>
+        </StackPanel>
+        <Slider Grid.Row="7" Grid.Column="2" Value="21" Maximum="100" Visibility="Collapsed"></Slider>
+        
+        <TextBlock Grid.Row="8" VerticalAlignment="Bottom" Text="Set Cooling Pause"></TextBlock>
+        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+            <TextBox VerticalAlignment="Bottom" Text="20"></TextBox>
+            <TextBlock Margin="5,0,0,0" Text="s"></TextBlock>
+        </StackPanel>
+        <Slider Grid.Row="8" Grid.Column="2" Value="20" Maximum="100" Visibility="Collapsed"></Slider>
+        <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+            <Button  Content="Adjust"></Button>
+            <TextBox Margin="10,0,0,0" ></TextBox>
+            <TextBlock Margin="10,0,0,0" Text="s"></TextBlock>
         </StackPanel>
         <chart:SfChart  
             Header="Phase shift measure"
             Legend="Legend"
-            Grid.Row="2"
-            Grid.RowSpan="5"
+            Grid.Row="0"
+            Grid.RowSpan="6"
             Grid.Column="2"
-            Margin="20,30,0,0">
+            Margin="20,0,0,0">
             <chart:SfChart.PrimaryAxis>
                 <chart:CategoryAxis Name="MyXAxis"></chart:CategoryAxis>
             </chart:SfChart.PrimaryAxis>
@@ -88,11 +113,12 @@
             <chart:LineSeries LegendIcon="SeriesType" Label="Label" XBindingPath="ElapsedTime" YBindingPath="TReturnForecasted" ItemsSource="{Binding power}"></chart:LineSeries>
         </chart:SfChart>
         <chart:SfChart  
-            Header="Phase shift measure"
+            Header="More intelligeht header here"
+            Margin="20,10,0,0"
             Legend="Legend"
-            Grid.Row="8"
+            Grid.Row="9"
             Grid.RowSpan="5"
-            Grid.ColumnSpan="3">
+            Grid.ColumnSpan="2">
             <chart:SfChart.PrimaryAxis>
                 <chart:CategoryAxis ></chart:CategoryAxis>
             </chart:SfChart.PrimaryAxis>
