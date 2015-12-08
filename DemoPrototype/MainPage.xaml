@@ -12,7 +12,6 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-
         <RelativePanel>
             <Button Name="HamburgerButton"
                     RelativePanel.AlignLeftWithPanel="True"
@@ -40,19 +39,14 @@
                    OpenPaneLength="220"
                    CompactPaneLength="56">
             <SplitView.Pane>
-                <ListBox SelectionMode="Single" SelectionChanged="ListBox_Changed"> 
+                <ListBox SelectionMode="Single" SelectionChanged="ListBox_Changed">
                     <ListBoxItem Name="OperatorListBox">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="36" Text="&#xEC61;"></TextBlock>
-                            <TextBlock FontSize="24" Margin="10,0,0,0">Operator</TextBlock>
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="36" Text="&#xEC58;"></TextBlock>
+                            <TextBlock FontSize="24" Margin="10,0,0,0">Moulding</TextBlock>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem Name="AdminListBoxItem">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="36" Text="&#xE164;"></TextBlock>
-                            <TextBlock FontSize="24" Margin="10,0,0,0">Admin</TextBlock>
-                        </StackPanel>
-                    </ListBoxItem>
+                   
                     <ListBoxItem Name="SettingsListBoxItem">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="36" Text="&#xE713;"></TextBlock>
@@ -71,11 +65,24 @@
                             <TextBlock FontSize="24" Margin="10,0,0,0">Maintenance</TextBlock>
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem Name="HelpListBoxItem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Margin="9,0,5,0" FontSize="36" Text="?"></TextBlock>
+                            <TextBlock FontSize="24" Margin="14,0,0,0">Help</TextBlock>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Name="AboutListBoxItem">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="36" Text="&#xE929;"></TextBlock>
+                            <TextBlock FontSize="24" Margin="10,0,0,0">About</TextBlock>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
             </SplitView.Pane>
             <SplitView.Content>
                 <Frame Name="MyFrame"></Frame>
             </SplitView.Content>
         </SplitView>
+        
     </Grid>
 </Page>

@@ -49,15 +49,10 @@ namespace DemoPrototype
             if (OperatorListBox.IsSelected)
             {
                 MyFrame.Navigate(typeof(OperatorPage));
-                TitleTextBlock.Text = "AOU Control System Operator View";
+                TitleTextBlock.Text = "Run Injection Moulding";
                 BackButton.Visibility = Visibility.Collapsed;
             }
-            else if (AdminListBoxItem.IsSelected)
-            {
-                MyFrame.Navigate(typeof(AdminPage));
-                TitleTextBlock.Text = "AOU Control System Admin View";
-                BackButton.Visibility = Visibility.Visible;
-            }
+           
             else if (SettingsListBoxItem.IsSelected)
             {
                 MyFrame.Navigate(typeof(SettingsPage));
