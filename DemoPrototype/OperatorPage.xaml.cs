@@ -31,6 +31,12 @@ namespace DemoPrototype
         {
             //SetHotTankSlider.Visibility="True";
         }
+
+        private void NewModeSelected(object sender, SelectionChangedEventArgs e)
+        {
+            //Urban visa dialog här
+            //kommunicera med PLC?
+        }
     }
 
 
