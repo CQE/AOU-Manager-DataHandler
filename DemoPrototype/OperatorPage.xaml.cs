@@ -37,6 +37,13 @@ namespace DemoPrototype
             //Urban visa dialog här
             //kommunicera med PLC?
         }
+
+        private void PhaseShiftButton(object sender, RoutedEventArgs e)
+        {
+            //just practice
+
+            PhaseShiftResultText.Text = "Phase Shift: 4 seconds";
+        }
     }
 
 
