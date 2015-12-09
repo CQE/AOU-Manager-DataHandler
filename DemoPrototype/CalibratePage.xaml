@@ -10,6 +10,8 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <TextBlock>
             In this page you should be able to calibrate some parameters...
+            
         </TextBlock>
+        
     </Grid>
 </Page>

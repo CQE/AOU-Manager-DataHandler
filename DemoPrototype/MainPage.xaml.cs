@@ -85,8 +85,8 @@ namespace DemoPrototype
             long MyTime = 0; //should read time from server here
             this.power = new ObservableCollection<Power>();
             //add some datapoints
-            power.Add(new Power() { ElapsedTime = MyTime + 1, THotTank = 220, TCoolTank = 45, TReturnValve = 37, TReturnActual = 45, TReturnForecasted = 67 });
-            power.Add(new Power() { ElapsedTime = MyTime + 2, THotTank = 227, TCoolTank = 41, TReturnValve = 87, TReturnActual = 43, TReturnForecasted = 77 });
+            power.Add(new Power() { ElapsedTime = MyTime + 1, THotTank = 220, TCoolTank = 45, TReturnValve = 37, TReturnActual = 45, TReturnForecasted = 67, State="Idle" });
+            power.Add(new Power() { ElapsedTime = MyTime + 2, THotTank = 227, TCoolTank = 41, TReturnValve = 87, TReturnActual = 43, TReturnForecasted = 77, State = "Idle" });
             power.Add(new Power() { ElapsedTime = MyTime + 3, THotTank = 235, TCoolTank = 37, TReturnValve = 77, TReturnActual = 45, TReturnForecasted = 67 });
             power.Add(new Power() { ElapsedTime = MyTime + 4, THotTank = 215, TCoolTank = 33, TReturnValve = 87, TReturnActual = 46, TReturnForecasted = 61 });
             power.Add(new Power() { ElapsedTime = MyTime + 5, THotTank = 204, TCoolTank = 40, TReturnValve = 77, TReturnActual = 43, TReturnForecasted = 77 });
@@ -161,6 +161,10 @@ namespace DemoPrototype
             get;
             set;
         }
-
+        public string State
+        {
+            get;
+            set;
+        }
     }
 }

@@ -26,6 +26,11 @@ namespace DemoPrototype
         {
             this.InitializeComponent();
         }
+
+        private void ShowHotTankSlider(object sender, RoutedEventArgs e)
+        {
+            //SetHotTankSlider.Visibility="True";
+        }
     }
 
 

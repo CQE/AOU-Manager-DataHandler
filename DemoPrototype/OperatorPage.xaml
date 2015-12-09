@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:chart="using:Syncfusion.UI.Xaml.Charts"
     mc:Ignorable="d">
-
+    <ScrollViewer>
     <Grid Margin="10,0,0,0" >
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
@@ -53,10 +53,10 @@
 
         <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox IsReadOnly="True" BorderThickness="0" Background="White" Text="210"></TextBox>
-            <TextBox Margin="10,0,0,0" Text="220"></TextBox>
+            <TextBox Margin="10,0,0,0" Text="220" GotFocus="ShowHotTankSlider"></TextBox>
             <TextBlock Text="Degrees C" Margin="5,0,0,0 "></TextBlock>
         </StackPanel>
-        <Slider Grid.Row="3" Grid.Column="2" VerticalAlignment="Bottom" Value="240" Maximum="250" Visibility="Collapsed"></Slider>
+        <Slider Name="SetHotTankSlider" Grid.Row="3" Grid.Column="2" VerticalAlignment="Bottom" Value="240" Maximum="250" Visibility="Collapsed"></Slider>
         <TextBlock Grid.Row="4" VerticalAlignment="Bottom" Text="T Cold Tank (T Actual, T Set)"></TextBlock>
         <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox Text="20"></TextBox>
@@ -112,25 +112,45 @@
             <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="TReturnActual" ItemsSource="{Binding power}"></chart:LineSeries>
             <chart:LineSeries LegendIcon="SeriesType" Label="Label" XBindingPath="ElapsedTime" YBindingPath="TReturnForecasted" ItemsSource="{Binding power}"></chart:LineSeries>
         </chart:SfChart>
+        
         <chart:SfChart  
             Header="More intelligeht header here"
             Margin="20,10,0,0"
             Legend="Legend"
             Grid.Row="9"
             Grid.RowSpan="5"
-            Grid.ColumnSpan="2">
+            Grid.Column="2">
             <chart:SfChart.PrimaryAxis>
                 <chart:CategoryAxis ></chart:CategoryAxis>
             </chart:SfChart.PrimaryAxis>
-            <chart:SfChart.SecondaryAxis>
-                <chart:NumericalAxis  Interval="10" Maximum="100" EnableAutoIntervalOnZooming="False"></chart:NumericalAxis>
-            </chart:SfChart.SecondaryAxis>
+                <chart:SfChart.SecondaryAxis>
+                    <chart:NumericalAxis  Interval="10" Maximum="300" EnableAutoIntervalOnZooming="False"></chart:NumericalAxis>
+                </chart:SfChart.SecondaryAxis>
             <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="TReturnActual" ItemsSource="{Binding power}"></chart:LineSeries>
             <chart:LineSeries LegendIcon="SeriesType" Label="Label" XBindingPath="ElapsedTime" YBindingPath="TReturnForecasted" ItemsSource="{Binding power}"></chart:LineSeries>
-        </chart:SfChart>
+            <chart:LineSeries XBindingPath="ElapsedTime" YBindingPath="THotTank" ItemsSource="{Binding power}"></chart:LineSeries>
+            <chart:LineSeries Label="This is a Label"  XBindingPath="ElapsedTime" YBindingPath="TCoolTank"  ItemsSource="{Binding power}"></chart:LineSeries>
+            <chart:LineSeries  Label="This is a Label"  XBindingPath="ElapsedTime" YBindingPath="TReturnValve" ItemsSource="{Binding power}"></chart:LineSeries>
+            </chart:SfChart>
 
+        <chart:SfChart  
+            Header="State graph"
+            Legend="Legend"
+            Grid.Row="9"
+            Grid.RowSpan="6"
+            Grid.ColumnSpan="2"
+            Margin="20,0,0,0">
+            <chart:SfChart.PrimaryAxis>
+                <chart:CategoryAxis Name="MyXAx"></chart:CategoryAxis>
+            </chart:SfChart.PrimaryAxis>
+            <chart:SfChart.SecondaryAxis>
+                <chart:NumericalAxis Name="MyYAx" Interval="10" Maximum="100" EnableAutoIntervalOnZooming="False"></chart:NumericalAxis>
+            </chart:SfChart.SecondaryAxis>
+            <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+        </chart:SfChart>
+        
     </Grid>
 
-
+    </ScrollViewer>
 
 </Page>
