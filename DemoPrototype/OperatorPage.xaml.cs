@@ -22,9 +22,32 @@ namespace DemoPrototype
     /// </summary>
     public sealed partial class OperatorPage : Page
     {
+        private bool isInitSelection = true; // ToDo. Better check
+
         public OperatorPage()
         {
             this.InitializeComponent();
+        }
+
+
+        private async void modalDlg(string title)
+        {
+            var dlg = new ContentDialog();
+            dlg.Title = title;
+            dlg.PrimaryButtonText = "Enable";
+            dlg.SecondaryButtonText = "Cancel";
+
+            ContentDialogResult res = await dlg.ShowAsync();
+            if (res == ContentDialogResult.Primary)
+            {
+                switch (title)
+                {
+                    //kommunicera med PLC?
+                    case "" : break; // example. sendToPLC 
+                }
+
+            }
+
         }
 
         private void ShowHotTankSlider(object sender, RoutedEventArgs e)
@@ -34,8 +57,16 @@ namespace DemoPrototype
 
         private void NewModeSelected(object sender, SelectionChangedEventArgs e)
         {
-            //Urban visa dialog här
-            //kommunicera med PLC?
+            ComboBoxItem item = (ComboBoxItem)e.AddedItems[0];
+            string modeTitle = item.Content.ToString();
+            if (!isInitSelection)
+            {
+                modalDlg(modeTitle);
+            }
+            else
+            {
+                isInitSelection = false;
+            }
         }
 
         private void PhaseShiftButton(object sender, RoutedEventArgs e)
