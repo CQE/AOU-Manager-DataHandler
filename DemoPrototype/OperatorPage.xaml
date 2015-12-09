@@ -8,7 +8,7 @@
     xmlns:chart="using:Syncfusion.UI.Xaml.Charts"
     mc:Ignorable="d">
     <ScrollViewer>
-    <Grid Margin="10,0,0,0" >
+    <Grid Margin="10,0,10,0" >
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height ="50"></RowDefinition>
@@ -35,7 +35,7 @@
         <TextBlock Text="T Tool" Grid.Row="1" HorizontalAlignment="Left"></TextBlock>
         <TextBlock Grid.Row="1" Grid.Column="1" Text="The tool is HOT" Foreground="Red"></TextBlock>
         <TextBlock Text="Running Mode" Grid.Row="0" HorizontalAlignment="Left"></TextBlock>
-        <ComboBox Grid.Row="0" Grid.Column="1">
+        <ComboBox Grid.Row="0" Grid.Column="1" SelectionChanged="NewModeSelected">
             <ComboBoxItem IsSelected="True" Content="Idle"></ComboBoxItem>
             <ComboBoxItem Content="Heating"></ComboBoxItem>
             <ComboBoxItem Content="Cooling"></ComboBoxItem>
@@ -92,7 +92,8 @@
         </StackPanel>
         <Slider Grid.Row="8" Grid.Column="2" Value="20" Maximum="100" Visibility="Collapsed"></Slider>
         <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-            <Button  Content="Adjust"></Button>
+            <TextBlock Name="PhaseShiftResultText" Text="Phase shift: 17 seconds"> </TextBlock>
+            <Button Click="PhaseShiftButton" Margin="10,0,0,0" Content="Adjust"></Button>
             <TextBox Margin="10,0,0,0" ></TextBox>
             <TextBlock Margin="10,0,0,0" Text="s"></TextBlock>
         </StackPanel>
