@@ -14,6 +14,11 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
+using Windows.Web;
+using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Streams;
+
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace DemoPrototype
@@ -71,8 +76,28 @@ namespace DemoPrototype
                 TitleTextBlock.Text = "AOU Control System Maintenance View";
                 BackButton.Visibility = Visibility.Visible;
             }
+            else if (HelpListBoxItem.IsSelected)
+            {
+                TitleTextBlock.Text = "AOU Control System Help";
+                BackButton.Visibility = Visibility.Collapsed;
+                DisplayHtml("Help");
+            }
+            else if (AboutListBoxItem.IsSelected)
+            {
+                TitleTextBlock.Text = "About AOU Control System";
+                BackButton.Visibility = Visibility.Collapsed;
+                DisplayHtml("About");
+            }
         }
 
+        public void DisplayHtml(string htmlPage)
+        {
+            WebView webView = new WebView();
+            Uri url = webView.BuildLocalStreamUri("page3", "/Assets/"+ htmlPage + ".html");
+            StreamUriWinRTResolver myResolver = new StreamUriWinRTResolver();
+            webView.NavigateToLocalStreamUri(url, myResolver);
+            MyFrame.Content = webView;
+        }
 
     }
 
@@ -166,5 +191,35 @@ namespace DemoPrototype
             get;
             set;
         }
+
     }
+
+    public sealed class StreamUriWinRTResolver : IUriToStreamResolver
+    {
+        public IAsyncOperation<IInputStream> UriToStreamAsync(Uri uri)
+        {
+            if (uri == null)
+            {
+                throw new Exception();
+            }
+            string path = uri.AbsolutePath;
+
+            // Because of the signature of the this method, it can't use await, so we 
+            // call into a seperate helper method that can use the C# await pattern.
+            return GetContent(path).AsAsyncOperation();
+        }
+
+        private async Task<IInputStream> GetContent(string path)
+        {
+            try
+            {
+                Uri localUri = new Uri("ms-appx://" + path);
+                StorageFile f = await StorageFile.GetFileFromApplicationUriAsync(localUri);
+                IRandomAccessStream stream = await f.OpenAsync(FileAccessMode.Read);
+                return stream;
+            }
+            catch (Exception) { throw new Exception("Invalid path"); }
+        }
+    }
+
 }
