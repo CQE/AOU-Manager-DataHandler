@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -23,12 +24,45 @@ namespace DemoPrototype
     public sealed partial class OperatorPage : Page
     {
         private bool isInitSelection = true; // ToDo. Better check
+        Timer updateTimer;
+        DispatcherTimer dTimer;
 
         public OperatorPage()
         {
             this.InitializeComponent();
+
+            InitBackgroundTimer();
+
+            InitDispatcherTimer();
+
         }
 
+        private void InitDispatcherTimer()
+        {
+            dTimer = new DispatcherTimer();
+            dTimer.Tick += UpdateTick;
+            dTimer.Interval = new TimeSpan(0, 0, 1);
+            dTimer.Start();
+        }
+
+        void UpdateTick(object sender, object e)
+        {
+            PhaseShiftValue.Text = DateTime.Now.ToString("mm:ss");
+            // dTimer.Stop();
+        }
+
+
+        private void InitBackgroundTimer()
+        {
+            AutoResetEvent autoEvent = new AutoResetEvent(false);
+            StatusChecker statusChecker = new StatusChecker();
+
+            // Create an inferred delegate that invokes methods for the timer.
+            TimerCallback tcb = statusChecker.CheckStatus;
+
+            // Create a timer that signals the delegate to invoke 
+            updateTimer = new Timer(tcb, autoEvent, 1000, 1000);
+        }
 
         private async void modalDlg(string title)
         {
@@ -43,7 +77,7 @@ namespace DemoPrototype
                 switch (title)
                 {
                     //kommunicera med PLC?
-                    case "" : break; // example. sendToPLC 
+                    case "": break; // example. sendToPLC 
                 }
 
             }
@@ -74,11 +108,35 @@ namespace DemoPrototype
             //just practice
 
             PhaseShiftResultText.Text = "Phase Shift: 4 seconds";
+            PhaseShiftValue.Text = 4.ToString();
         }
+
     }
 
 
-   
+    class StatusChecker
+    {
+        private int count;
+
+        public StatusChecker()
+        {
+            count = 0;
+        }
+
+        // This method is called by the timer delegate.
+        public void CheckStatus(Object stateInfo)
+        {
+            count++;
+            string curTime = DateTime.Now.ToString("hh:mm:ss");
+
+            if (false) {
+                //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+                // Reset and signal Main.
+                // autoEvent.Set();
+            }
+
+        }
+    }
 
 
 }

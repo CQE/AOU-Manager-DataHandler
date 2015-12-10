@@ -94,7 +94,7 @@
         <StackPanel Grid.Row="6" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
             <TextBlock Name="PhaseShiftResultText" Text="Phase shift: 15 seconds"> </TextBlock>
             <Button Click="PhaseShiftButton" Margin="10,0,0,0" Content="Adjust"></Button>
-            <TextBox Margin="10,0,0,0" ></TextBox>
+                <TextBox Name="PhaseShiftValue" Margin="10,0,0,0" ></TextBox>
             <TextBlock Margin="10,0,0,0" Text="s"></TextBlock>
         </StackPanel>
         <chart:SfChart  
