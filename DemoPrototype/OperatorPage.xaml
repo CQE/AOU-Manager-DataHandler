@@ -54,14 +54,14 @@
         <StackPanel Grid.Row="3" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox IsReadOnly="True" BorderThickness="0" Background="White" Text="210"></TextBox>
             <TextBox Margin="10,0,0,0" Text="220" GotFocus="ShowHotTankSlider"></TextBox>
-            <TextBlock Text="Degrees C" Margin="5,0,0,0 "></TextBlock>
+                <TextBlock Text="°C/°F" Margin="5,0,0,0 "></TextBlock>
         </StackPanel>
         <Slider Name="SetHotTankSlider" Grid.Row="3" Grid.Column="2" VerticalAlignment="Bottom" Value="240" Maximum="250" Visibility="Collapsed"></Slider>
         <TextBlock Grid.Row="4" VerticalAlignment="Bottom" Text="T Cold Tank (T Actual, T Set)"></TextBlock>
         <StackPanel Grid.Row="4" Grid.Column="1" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBox Text="20"></TextBox>
             <TextBox Margin="10,0,0,0" Text="25"></TextBox>
-            <TextBlock Margin="5,0,0,0 " Text="Degrees C"></TextBlock>
+                <TextBlock Margin="5,0,0,0 " Text="°C/°F"></TextBlock>
         </StackPanel>
         <Slider Grid.Row="4" Grid.Column="2" Value="40" Maximum="250" Visibility="Collapsed"></Slider>
         <TextBlock Grid.Row="5"  VerticalAlignment="Bottom" Text="Set Heating Time "></TextBlock>
