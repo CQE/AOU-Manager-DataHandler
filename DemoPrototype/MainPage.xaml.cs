@@ -167,4 +167,16 @@ namespace DemoPrototype
             set;
         }
     }
+
+    static class Global
+    {
+        //use this class for global variables
+        private static Boolean _IsCelsius;
+
+        public static Boolean IsCelsius
+        {
+            get { return _IsCelsius; }
+            set { _IsCelsius = value; }
+        }
+    }
 }
