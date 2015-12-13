@@ -132,8 +132,11 @@
     <None Include="DemoPrototype_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\About.html" />
     <Content Include="Assets\Financial.png" />
     <Content Include="Assets\Food.png" />
+    <Content Include="Assets\Help.html" />
+    <Content Include="Assets\imm-img.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
