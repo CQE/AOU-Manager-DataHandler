@@ -110,7 +110,11 @@
             <chart:SfChart.SecondaryAxis>
                 <chart:NumericalAxis Name="MyYAxis" Interval="10" Maximum="100" EnableAutoIntervalOnZooming="False"></chart:NumericalAxis>
             </chart:SfChart.SecondaryAxis>
-            <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="TReturnActual" ItemsSource="{Binding power}"></chart:LineSeries>
+                <chart:SfChart.Annotations>
+                    <chart:VerticalLineAnnotation Name="PhaseVLine1"  CanDrag="True" Width="2" CoordinateUnit="Axis" X1="5"></chart:VerticalLineAnnotation>
+                    <chart:VerticalLineAnnotation CanDrag="True"  CoordinateUnit="Axis" X1="22"></chart:VerticalLineAnnotation>
+                </chart:SfChart.Annotations>
+                <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="TReturnActual" ItemsSource="{Binding power}"></chart:LineSeries>
             <chart:LineSeries LegendIcon="SeriesType" Label="Label" XBindingPath="ElapsedTime" YBindingPath="TReturnForecasted" ItemsSource="{Binding power}"></chart:LineSeries>
         </chart:SfChart>
         
@@ -125,7 +129,12 @@
                 <chart:CategoryAxis ></chart:CategoryAxis>
             </chart:SfChart.PrimaryAxis>
                 <chart:SfChart.SecondaryAxis>
-                    <chart:NumericalAxis  Interval="10" Maximum="300" EnableAutoIntervalOnZooming="False"></chart:NumericalAxis>
+                    <chart:NumericalAxis Minimum="0" Interval="10" Maximum="300" EnableAutoIntervalOnZooming="False">
+                        <chart:NumericalAxis.StripLines>
+                            <chart:ChartStripLine Start="200" Width="20" Label="Hot Tank Safe Zone" Background="PaleGreen"></chart:ChartStripLine>
+                            <chart:ChartStripLine Start="15" Width="30" Label="Cool Tank Safe Zone" Background="PaleGoldenrod"></chart:ChartStripLine>
+                        </chart:NumericalAxis.StripLines>
+                    </chart:NumericalAxis>
                 </chart:SfChart.SecondaryAxis>
             <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="TReturnActual" ItemsSource="{Binding power}"></chart:LineSeries>
             <chart:LineSeries LegendIcon="SeriesType" Label="Label" XBindingPath="ElapsedTime" YBindingPath="TReturnForecasted" ItemsSource="{Binding power}"></chart:LineSeries>

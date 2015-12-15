@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Margin="10,10,10,10" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -23,15 +23,14 @@
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-                   
-            <TextBlock Text="Set Temp 1"></TextBlock>
-            <Slider Grid.Column="1" Name="testSlider" Maximum="250" Value="145" Margin="20,0,0,20"></Slider>
-        
-            <TextBlock  Grid.Row="1" Text="Set Temp 2"></TextBlock>
-        <Slider Grid.Row="1" Grid.Column="1" Name="testSlider2" Maximum="250" Value="25" Margin="20,0,0,20"></Slider>
-        
-            <TextBlock Grid.Row="2" Text="Set Temp 3"></TextBlock>
-        <Slider Grid.Row="2" Grid.Column="1" Name="testSlider3" Maximum="250" Value="245" Margin="20,0,0,20"></Slider>
+
+        <StackPanel Grid.Row="1"  Orientation ="Horizontal">
+            <TextBlock Text="Use Celsius or Farenheit"></TextBlock>
+            <ComboBox Name="UnitComboBox"   SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
+                <ComboBoxItem Content="Celsius"></ComboBoxItem>
+                <ComboBoxItem Content="Farenheit"></ComboBoxItem>
+            </ComboBox>
+        </StackPanel>   
 
         <TextBlock Grid.Row="3" Text="Show T Hot Tank" FontSize="18" VerticalAlignment="Center"></TextBlock>
         <ToggleSwitch Grid.Row="3" Grid.Column="1" Tag="Temp2" IsOn="True" Margin="20,0,0,0"></ToggleSwitch>
