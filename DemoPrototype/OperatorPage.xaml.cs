@@ -106,8 +106,9 @@ namespace DemoPrototype
         private void PhaseShiftButton(object sender, RoutedEventArgs e)
         {
             //just practice
+            double firstSlope = (double)PhaseVLine1.X1;
 
-            PhaseShiftResultText.Text = "Phase Shift: 4 seconds";
+            PhaseShiftResultText.Text = firstSlope.ToString();
             PhaseShiftValue.Text = 4.ToString();
         }
 
