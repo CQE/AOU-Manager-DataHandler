@@ -26,5 +26,22 @@ namespace DemoPrototype
         {
             this.InitializeComponent();
         }
+
+        private void CheckUnit(object sender, SelectionChangedEventArgs e)
+        {
+            
+        }
+
+        private void ComboBox_CheckUnit(object sender, SelectionChangedEventArgs e)
+        {
+            var combo = (ComboBox)sender;
+            var item = (ComboBoxItem)combo.SelectedItem;
+            string unit = item.Content.ToString();
+            if (unit == "Farenheit")
+            { Global.IsCelsius = false; }
+            else
+            { Global.IsCelsius = true;  }
+                        
+        }
     }
 }
