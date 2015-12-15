@@ -105,13 +105,22 @@ namespace DemoPrototype
 
         private void PhaseShiftButton(object sender, RoutedEventArgs e)
         {
-            //just practice
+            //Just testing
             double firstSlope = (double)PhaseVLine1.X1;
 
             PhaseShiftResultText.Text = firstSlope.ToString();
             PhaseShiftValue.Text = 4.ToString();
         }
 
+        private void PhaseLine1_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)
+        {
+            //Urban please replace this code with code showing diff between the lines, and center the Chartstripline
+        }
+
+        private void PhaseLine2_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)
+        {
+            //Urban please replace this code with code showing diff between the lines, and center the Chartstripline
+        }
     }
 
 
