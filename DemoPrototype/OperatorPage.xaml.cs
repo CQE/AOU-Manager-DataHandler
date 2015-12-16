@@ -64,10 +64,11 @@ namespace DemoPrototype
             updateTimer = new Timer(tcb, autoEvent, 1000, 1000);
         }
 
-        private async void modalDlg(string title)
+        private async void modalDlg(string title, string message)
         {
             var dlg = new ContentDialog();
             dlg.Title = title;
+            dlg.Content = message;
             dlg.PrimaryButtonText = "Enable";
             dlg.SecondaryButtonText = "Cancel";
 
@@ -86,16 +87,17 @@ namespace DemoPrototype
 
         private void ShowHotTankSlider(object sender, RoutedEventArgs e)
         {
-            //SetHotTankSlider.Visibility="True";
+       //     SetHotTankSlider.Visibility="True";
         }
 
         private void NewModeSelected(object sender, SelectionChangedEventArgs e)
         {
             ComboBoxItem item = (ComboBoxItem)e.AddedItems[0];
             string modeTitle = item.Content.ToString();
+            string message = "You are about to change running mode";
             if (!isInitSelection)
             {
-                modalDlg(modeTitle);
+                modalDlg(modeTitle, message);
             }
             else
             {
