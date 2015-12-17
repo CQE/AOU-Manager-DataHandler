@@ -145,11 +145,7 @@ namespace DemoPrototype
             get;
             set;
         }
-        //public void AddPoint(Power newPoint)});
-        //    power.Add(new Power() { ElapsedTime = MyTime + 28, THotTank = 204, TCoolTank = 35, TReturnValve = 58, TReturnActual = 43, TReturnForecasted = 42 
-        //{
-        //    power.Add(newPoint);
-       // }
+        
     }
 
     public class Power
