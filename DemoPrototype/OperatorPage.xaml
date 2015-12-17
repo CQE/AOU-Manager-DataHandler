@@ -8,7 +8,7 @@
     xmlns:chart="using:Syncfusion.UI.Xaml.Charts"
     mc:Ignorable="d">
     <ScrollViewer>
-    <Grid Margin="10,0,10,0" >
+        <Grid Name="mainGrid" Margin="10,0,10,0" >
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height ="50"></RowDefinition>
@@ -42,9 +42,10 @@
             <ComboBoxItem Content="Fixed Cycling"></ComboBoxItem>
             <ComboBoxItem Content="Auto with IMM"></ComboBoxItem>
         </ComboBox>
-        <TextBlock Grid.Row="2" VerticalAlignment="Bottom" Text="Set Runtime Parameters"></TextBlock>
+            <TextBlock Grid.Row="2" VerticalAlignment="Bottom" Text="Set Runtime Parameters"></TextBlock>
         <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Bottom">
-            <TextBlock Text="T Hot Tank ( T"></TextBlock>
+                <TextBlock VerticalAlignment="Bottom" Name="TextCorF"></TextBlock>
+                <TextBlock Text="T Hot Tank ( T"></TextBlock>
             <TextBlock Margin="0,7,0,0" FontSize="11" Text="Actual "></TextBlock>
             <TextBlock Text=", T"></TextBlock>
             <TextBlock Margin="0,7,0,0" FontSize="11" Text="Set"></TextBlock>

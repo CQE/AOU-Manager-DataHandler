@@ -14,6 +14,8 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading;
+
 
 namespace DemoPrototype
 {
@@ -26,6 +28,10 @@ namespace DemoPrototype
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+        /// 
+
+        Timer updateTimer; // moved from OperatotPage.xaml.cs
+
         public App()
         {
             Microsoft.ApplicationInsights.WindowsAppInitializer.InitializeAsync(
@@ -33,6 +39,15 @@ namespace DemoPrototype
                 Microsoft.ApplicationInsights.WindowsCollectors.Session);
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+
+            // Create a timer that signals the delegate to invoke 
+            AutoResetEvent autoEvent = new AutoResetEvent(false);
+            StatusChecker statusChecker = new StatusChecker();
+
+            // Create an inferred delegate that invokes methods for the timer.
+            TimerCallback tcb = statusChecker.CheckStatus;
+
+            updateTimer = new Timer(tcb, autoEvent, 1000, 60000);
         }
 
         /// <summary>

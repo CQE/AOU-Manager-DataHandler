@@ -12,8 +12,6 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using System.Threading;
-
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace DemoPrototype
@@ -24,14 +22,15 @@ namespace DemoPrototype
     public sealed partial class OperatorPage : Page
     {
         private bool isInitSelection = true; // ToDo. Better check
-        Timer updateTimer;
+        // Timer updateTimer; moved to App.xaml.cs
         DispatcherTimer dTimer;
+        private DataUpdater dataUpdater;
 
         public OperatorPage()
         {
             this.InitializeComponent();
             //set initial values for temperature unit
-            if (Global.IsCelsius)
+            if (GlobalAppSettings.IsCelsius)
             {
                 TextCorF.Text = " (°C)";
             }
@@ -39,12 +38,10 @@ namespace DemoPrototype
             {
                 TextCorF.Text = " (°F)";
             }
-            
 
-            InitBackgroundTimer();
+            dataUpdater = new DataUpdater();
 
             InitDispatcherTimer();
-
         }
 
         private void InitDispatcherTimer()
@@ -57,21 +54,8 @@ namespace DemoPrototype
 
         void UpdateTick(object sender, object e)
         {
-            PhaseShiftValue.Text = DateTime.Now.ToString("mm:ss");
-            // dTimer.Stop();
-        }
-
-
-        private void InitBackgroundTimer()
-        {
-            AutoResetEvent autoEvent = new AutoResetEvent(false);
-            StatusChecker statusChecker = new StatusChecker();
-
-            // Create an inferred delegate that invokes methods for the timer.
-            TimerCallback tcb = statusChecker.CheckStatus;
-
-            // Create a timer that signals the delegate to invoke 
-            updateTimer = new Timer(tcb, autoEvent, 1000, 1000);
+            if (mainGrid.DataContext != null)
+                dataUpdater.UpdateInputData(mainGrid.DataContext);
         }
 
         private async void modalDlg(string title, string message)
@@ -117,11 +101,13 @@ namespace DemoPrototype
 
         private void PhaseShiftButton(object sender, RoutedEventArgs e)
         {
+            double firstSlope = GlobalAppSettings.SafeConvertToDouble(PhaseVLine1.X1);
+            
             //Just testing
-            double firstSlope = (double)PhaseVLine1.X1;
+            //double firstSlope = (double)PhaseVLine1.X1;
 
             PhaseShiftResultText.Text = firstSlope.ToString();
-            PhaseShiftValue.Text = 4.ToString();
+            // PhaseShiftValue.Text = 4.ToString();
         }
 
         private void PhaseLine1_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)
