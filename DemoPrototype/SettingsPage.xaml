@@ -26,9 +26,9 @@
 
         <StackPanel Grid.Row="1"  Orientation ="Horizontal">
             <TextBlock Text="Use Celsius or Farenheit"></TextBlock>
-            <ComboBox Name="UnitComboBox"   SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
-                <ComboBoxItem Content="Celsius"></ComboBoxItem>
-                <ComboBoxItem Content="Farenheit"></ComboBoxItem>
+            <ComboBox Name="UnitComboBox" SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
+                <ComboBoxItem Name="ComboBoxItemCelsius" Content="Celsius"></ComboBoxItem>
+                <ComboBoxItem Name="ComboBoxItemFarenheit" Content="Farenheit"></ComboBoxItem>
             </ComboBox>
         </StackPanel>   
 

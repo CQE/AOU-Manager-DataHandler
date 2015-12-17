@@ -196,7 +196,8 @@ namespace DemoPrototype
 
     static class Global
     {
-        private static bool _isCelsius;
+        //Default is celsius
+        private static bool _isCelsius = true;
 
         public static bool IsCelsius
         {

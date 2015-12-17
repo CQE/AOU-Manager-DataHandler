@@ -30,6 +30,16 @@ namespace DemoPrototype
         public OperatorPage()
         {
             this.InitializeComponent();
+            //set initial values for temperature unit
+            if (Global.IsCelsius)
+            {
+                TextCorF.Text = " (°C)";
+            }
+            else
+            {
+                TextCorF.Text = " (°F)";
+            }
+            
 
             InitBackgroundTimer();
 
