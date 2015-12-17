@@ -5,13 +5,96 @@
     xmlns:local="using:DemoPrototype"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:chart="using:Syncfusion.UI.Xaml.Charts"
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock>
-            In this page you should be able to calibrate some parameters...
-            
-        </TextBlock>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition ></RowDefinition>
+            <RowDefinition ></RowDefinition>
+            <RowDefinition ></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <Grid.DataContext>
+            <local:LineChartViewModel/>
+        </Grid.DataContext>
+
+        <chart:SfChart  
+            Header="Tempering Delay Times (s)"
+            Legend="Legend"
+            Grid.Row="1"
+            Grid.RowSpan="3"
+            Grid.ColumnSpan="1"
+            Margin="20,10,0,0">
+            <chart:SfChart.PrimaryAxis>
+                <chart:CategoryAxis ></chart:CategoryAxis>
+            </chart:SfChart.PrimaryAxis>
+            <chart:SfChart.SecondaryAxis>
+                <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
+                </chart:NumericalAxis>
+            </chart:SfChart.SecondaryAxis>
+            <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+        </chart:SfChart>
+
+        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Content="Hot step"></Button>
+        <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Content="Cold step"></Button>
+        <StackPanel Margin="10,0,0,0"  Orientation="Horizontal" Grid.Row="3"  Grid.Column="1" >
+            <TextBlock  VerticalAlignment="Center" Text="Cycle"></TextBlock>
+            <ToggleSwitch  Margin="5,0,0,0"  VerticalAlignment="Center" IsOn="False" ></ToggleSwitch>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="Hot pump" VerticalAlignment="Bottom" HorizontalAlignment="Right"> </TextBlock>
+        <TextBlock Grid.Row="2" Grid.Column="2" Text="Cold pump" VerticalAlignment="Bottom" HorizontalAlignment="Right"></TextBlock>
+
+        <chart:SfChart  
+            Header="Energy Balance"
+            Legend="Legend"
+            Grid.Row="6"
+            Grid.RowSpan="3"
+            Grid.ColumnSpan="1"
+            Margin="20,10,0,0">
+            <chart:SfChart.PrimaryAxis>
+                <chart:CategoryAxis ></chart:CategoryAxis>
+            </chart:SfChart.PrimaryAxis>
+            <chart:SfChart.SecondaryAxis>
+                <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
+                </chart:NumericalAxis>
+            </chart:SfChart.SecondaryAxis>
+            <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+        </chart:SfChart>
+
+        <chart:SfChart  
+            Header="Volume Balance"
+            Legend="Legend"
+            Grid.Row="6"
+             Grid.Column="2"
+            Grid.RowSpan="3"
+            Grid.ColumnSpan="2"
+            Margin="20,10,0,0">
+        <chart:SfChart.PrimaryAxis>
+            <chart:CategoryAxis ></chart:CategoryAxis>
+        </chart:SfChart.PrimaryAxis>
+        <chart:SfChart.SecondaryAxis>
+            <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
+            </chart:NumericalAxis>
+        </chart:SfChart.SecondaryAxis>
+        <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+        </chart:SfChart>
+
     </Grid>
 </Page>

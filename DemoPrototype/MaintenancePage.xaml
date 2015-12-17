@@ -8,6 +8,70 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel Margin="10,10,0,0" Orientation="Vertical" Width="220" HorizontalAlignment="Left">
+            <TextBlock FontWeight="SemiBold" Text="Force valves (On/Off)"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Hot feed valve"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Cold feed valve"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Width="110" VerticalAlignment="Center" Text="Return valve"></TextBlock>
+                <ToggleSwitch IsEnabled="False" IsOn="True" Margin="5,0,0,0" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Width="110" VerticalAlignment="Center" Text="Coolant valve"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
 
+            <TextBlock FontWeight="SemiBold" Margin="0,10,0,0" Text="Force pumps (On/Off)"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Pump hot"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"  IsOn="True" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Pump cold"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+
+            <TextBlock FontWeight="SemiBold" Margin="0,10,0,0" Text="Available heating bars (On/Off)"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Bar 1"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"  IsOn="True" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Bar 2"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Bar 3"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"  IsOn="True" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Bar 4"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Bar 5"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"  IsOn="True" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Bar 6"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110"  VerticalAlignment="Center" Text="Bar 7"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"  IsOn="True" HorizontalAlignment="Right"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock  Width="110" VerticalAlignment="Center" Text="Bar 8"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+
+
+        </StackPanel>    
     </Grid>
 </Page>
