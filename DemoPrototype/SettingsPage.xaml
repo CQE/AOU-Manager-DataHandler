@@ -24,44 +24,18 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
+
         <StackPanel Grid.Row="1"  Orientation ="Horizontal">
             <TextBlock Text="Use Celsius or Farenheit"></TextBlock>
             <ComboBox Name="UnitComboBox" SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
                 <ComboBoxItem Name="ComboBoxItemCelsius" Content="Celsius"></ComboBoxItem>
                 <ComboBoxItem Name="ComboBoxItemFarenheit" Content="Farenheit"></ComboBoxItem>
             </ComboBox>
-        </StackPanel>   
-
-        <TextBlock Grid.Row="3" Text="Show T Hot Tank" FontSize="18" VerticalAlignment="Center"></TextBlock>
-        <ToggleSwitch Grid.Row="3" Grid.Column="1" Tag="Temp2" IsOn="True" Margin="20,0,0,0"></ToggleSwitch>
-
-        <TextBlock Grid.Row="4" Text="Show T Cold Tank" VerticalAlignment="Center"></TextBlock>
-        <ToggleSwitch Grid.Row="4" Grid.Column="1" Tag="Temp2" Margin="20,0,0,0"></ToggleSwitch>
-
-        <TextBlock Grid.Row="5" Text="Show T Return Valve" FontSize="18" VerticalAlignment="Center"></TextBlock>
-        <ToggleSwitch Grid.Row="5" Grid.Column="1" Tag="Temp2" IsOn="True" Margin="20,0,0,0"></ToggleSwitch>
-
-        <TextBlock Grid.Row="6" Text="Show T Buffer Tank" FontSize="18" VerticalAlignment="Center"></TextBlock>
-        <ToggleSwitch Grid.Row="6" Grid.Column="1" Tag="Temp2" IsOn="False" Margin="20,0,0,0"></ToggleSwitch>
-
-        <TextBlock Grid.Row="7" Text="Show T Heating cartridge" FontSize="18" VerticalAlignment="Center"></TextBlock>
-        <ToggleSwitch Grid.Row="7" Grid.Column="1" Tag="Temp2" IsOn="True" Margin="20,0,0,0"></ToggleSwitch>
-
-        <StackPanel  Grid.Row="8" Orientation="Horizontal">
-        <StackPanel Orientation="Vertical">
-                <TextBlock> Tempering Delay Times </TextBlock>
-                <TextBlock> feed valve - return valve (s)</TextBlock>
-                <TextBlock HorizontalAlignment="Right"> Calibrated + Adjust = Estimated</TextBlock>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Margin="5,0,0,0"> Hot Pump </TextBlock>
-                    <TextBlock Margin="20,0,0,0"> 10 </TextBlock>
-                    <TextBox   Margin="10,0,0,0" Text="0"></TextBox>
-                    <TextBlock Margin="10,0,0,0"> 12 </TextBlock>
-                </StackPanel>
         </StackPanel>
-        <Rectangle Width="400" Height="200" Fill="Beige"></Rectangle>
-           
-        </StackPanel>
+        
+         
+         
+        
 
     </Grid>
 </Page>

@@ -38,9 +38,9 @@ namespace DemoPrototype
             var item = (ComboBoxItem)combo.SelectedItem;
             string unit = item.Content.ToString();
             if (unit == "Farenheit")
-            { Global.IsCelsius = false; }
+            { GlobalAppSettings.IsCelsius = false; }
             else
-            { Global.IsCelsius = true;  }
+            { GlobalAppSettings.IsCelsius = true;  }
                         
         }
     }
