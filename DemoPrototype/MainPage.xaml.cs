@@ -101,6 +101,7 @@ namespace DemoPrototype
 
     }
 
+    /* Delete. Moved to DataUpdater 
     public class LineChartViewModel
         //Our class for handling chart data
     {
@@ -148,6 +149,7 @@ namespace DemoPrototype
         
     }
 
+
     public class Power
         //Represens one data collection
     {
@@ -190,19 +192,7 @@ namespace DemoPrototype
 
     }
 
-    static class Global
-    {
-        //Default is celsius
-        private static bool _isCelsius = true;
-
-        public static bool IsCelsius
-        {
-            get { return _isCelsius; }
-            set { _isCelsius = value; }
-        }
-
-
-    }
+     */
 
     public sealed class StreamUriWinRTResolver : IUriToStreamResolver
     {
