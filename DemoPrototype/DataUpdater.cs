@@ -63,43 +63,23 @@ namespace DemoPrototype
     //Our class for handling chart data
     {
         long ts; // Time, Timestamp or ...
+        Random rnd;
+
 
         public LineChartViewModel()
         {
             //initialise
             ts = 0;
+            this.rnd = new Random();
             this.power = new ObservableCollection<Power>();
+
             //add some datapoints
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 220, TCoolTank = 45, TReturnValve = 37, TReturnActual = 45, TReturnForecasted = 67, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 227, TCoolTank = 41, TReturnValve = 87, TReturnActual = 43, TReturnForecasted = 77, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 235, TCoolTank = 37, TReturnValve = 77, TReturnActual = 45, TReturnForecasted = 67, State = 6 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 215, TCoolTank = 33, TReturnValve = 87, TReturnActual = 46, TReturnForecasted = 61, State = 5 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 40, TReturnValve = 77, TReturnActual = 43, TReturnForecasted = 77, State = 4 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 205, TCoolTank = 39, TReturnValve = 67, TReturnActual = 42, TReturnForecasted = 87, State = 3 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 38, TReturnValve = 57, TReturnActual = 46, TReturnForecasted = 61, State = 3 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 35, TReturnValve = 58, TReturnActual = 42, TReturnForecasted = 87, State = 2 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 214, TCoolTank = 31, TReturnValve = 59, TReturnActual = 41, TReturnForecasted = 63, State = 2 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 224, TCoolTank = 38, TReturnValve = 57, TReturnActual = 41, TReturnForecasted = 63, State = 2 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 220, TCoolTank = 45, TReturnValve = 37, TReturnActual = 42, TReturnForecasted = 87, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 227, TCoolTank = 41, TReturnValve = 87, TReturnActual = 40, TReturnForecasted = 45, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 235, TCoolTank = 37, TReturnValve = 77, TReturnActual = 41, TReturnForecasted = 44, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 215, TCoolTank = 33, TReturnValve = 87, TReturnActual = 42, TReturnForecasted = 43, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 40, TReturnValve = 77, TReturnActual = 43, TReturnForecasted = 42, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 205, TCoolTank = 39, TReturnValve = 67, TReturnActual = 44, TReturnForecasted = 41, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 38, TReturnValve = 57, TReturnActual = 45, TReturnForecasted = 40, State = 7 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 35, TReturnValve = 58, TReturnActual = 44, TReturnForecasted = 41 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 214, TCoolTank = 31, TReturnValve = 59, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 224, TCoolTank = 38, TReturnValve = 57, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 220, TCoolTank = 45, TReturnValve = 37, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 227, TCoolTank = 41, TReturnValve = 87, TReturnActual = 43, TReturnForecasted = 60 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 235, TCoolTank = 37, TReturnValve = 77, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 215, TCoolTank = 33, TReturnValve = 87, TReturnActual = 43, TReturnForecasted = 60 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 40, TReturnValve = 77, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 205, TCoolTank = 39, TReturnValve = 67, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 204, TCoolTank = 38, TReturnValve = 57, TReturnActual = 43, TReturnForecasted = 60 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 214, TCoolTank = 31, TReturnValve = 59, TReturnActual = 43, TReturnForecasted = 42 });
-            power.Add(new Power() { ElapsedTime = ts++, THotTank = 224, TCoolTank = 38, TReturnValve = 57, TReturnActual = 43, TReturnForecasted = 42 });
+            for (int i = 0; i < 30; i++)
+            {
+                AddRandomPoint();
+            }
         }
+
         public ObservableCollection<Power> power
         {
             get;
@@ -118,13 +98,15 @@ namespace DemoPrototype
 
         public void AddRandomPoint()
         {
-            var rnd = new Random();
             long valTHotTank = rnd.Next(204, 235);
             long valTCoolTank = rnd.Next(31, 45);
             long valTReturnValve = rnd.Next(40, 87);
             long valTReturnActual = rnd.Next(40, 46);
             long valTReturnForecasted = rnd.Next(40, 77);
             int valState = rnd.Next(2, 7);
+            long valTBufferHot = rnd.Next(100, 200);
+            long valTBufferMid = rnd.Next(75, 150);
+            long valTBufferCold = rnd.Next(20, 100);
 
             var power = new Power()
             {
@@ -134,6 +116,9 @@ namespace DemoPrototype
                 TReturnValve = valTReturnValve,
                 TReturnActual = valTReturnActual,
                 TReturnForecasted = valTReturnForecasted,
+                TBufferHot = valTBufferHot,
+                TBufferMid = valTBufferMid,
+                TBufferCold = valTBufferCold,
                 State = valState
             };
 
@@ -175,11 +160,32 @@ namespace DemoPrototype
             get;
             set;
         }
+
+        public double TBufferHot
+        {
+            get;
+            set;
+        }
+
+        public double TBufferMid
+        {
+            get;
+            set;
+        }
+
+        public double TBufferCold
+        {
+            get;
+            set;
+        }
+
+
         public int State
         {
             get;
             set;
         }
+
 
     }
 }
