@@ -150,7 +150,7 @@
             <chart:SfChart.SecondaryAxis>
                 <chart:NumericalAxis Name="MyYAxis" Interval="10" Maximum="100" EnableAutoIntervalOnZooming="False">
                         <chart:NumericalAxis.StripLines>
-                            <chart:ChartStripLine Name="DiffStripline" IsSegmented="True" SegmentStartValue="11" SegmentEndValue="15" Start="60" Width="10" Label="17" Background="Yellow"></chart:ChartStripLine>
+                            <chart:ChartStripLine Name="DiffStripline" IsSegmented="True" SegmentStartValue="11" SegmentEndValue="15" Start="60" Width="10" Label="13" Background="Yellow"></chart:ChartStripLine>
                         </chart:NumericalAxis.StripLines>
                     </chart:NumericalAxis>
             </chart:SfChart.SecondaryAxis>

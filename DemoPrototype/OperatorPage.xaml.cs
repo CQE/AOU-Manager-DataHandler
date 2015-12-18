@@ -31,7 +31,7 @@ namespace DemoPrototype
         {
             this.InitializeComponent();
             //set initial values for temperature unit
-            if (Global.IsCelsius)
+            if (GlobalAppSettings.IsCelsius)
             {
                 TextCorF.Text = " (°C)";
             }
