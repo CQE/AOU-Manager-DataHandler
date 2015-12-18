@@ -11,8 +11,8 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="auto"></ColumnDefinition>
+            <ColumnDefinition Width="auto"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -83,6 +83,119 @@
             </StackPanel>
 
 
-        </StackPanel>    
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Margin='20,0,0,0'>
+            <TextBlock FontWeight="SemiBold" Text="Temperature (C) will work soon"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Hot tank"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Cold tank"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Return valve"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            
+            <TextBlock Margin="5,5,0,0" Text="Buffer tank"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil hot side"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil middle"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil cold side"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+
+            <TextBlock Margin="5,5,0,0" Text="Heating cartridge"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil inlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil outlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+
+            <TextBlock Margin="5,5,0,0" Text="Heat exchanger cartridge"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil inlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Oil outlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Coolant water inlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Coolant water outlet"></TextBlock>
+                <TextBox IsEnabled="False" Text="100"></TextBox>
+            </StackPanel>
+
+
+
+
+        </StackPanel>
+
+
+        <StackPanel Grid.Column="2" Margin='20,0,0,0'>
+            <TextBlock FontWeight="SemiBold" Text="Flow (lpm)"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Coolant water"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Heat transfer oil"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+
+            <TextBlock FontWeight="SemiBold" Text="Pressure (bar/psi)"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Hot pump output"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Cold pump output"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Tool return"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Hot tank"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Cold tank"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Particle filter"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Tool feed output"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Pneumatics"></TextBlock>
+                <TextBox IsEnabled="False" Text="55"></TextBox>
+            </StackPanel>
+
+        </StackPanel>
+
+
     </Grid>
 </Page>
