@@ -24,12 +24,14 @@ namespace DemoPrototype
     public sealed partial class OperatorPage : Page
     {
         private bool isInitSelection = true; // ToDo. Better check
-        Timer updateTimer;
         DispatcherTimer dTimer;
+        private DataUpdater dataUpdater;
 
         public OperatorPage()
         {
             this.InitializeComponent();
+            dataUpdater = new DataUpdater();
+
             //set initial values for temperature unit
             if (GlobalAppSettings.IsCelsius)
             {
@@ -39,12 +41,8 @@ namespace DemoPrototype
             {
                 TextCorF.Text = " (°F)";
             }
-            
-
-            InitBackgroundTimer();
 
             InitDispatcherTimer();
-
         }
 
         private void InitDispatcherTimer()
@@ -57,21 +55,8 @@ namespace DemoPrototype
 
         void UpdateTick(object sender, object e)
         {
-            PhaseShiftValue.Text = DateTime.Now.ToString("mm:ss");
-            // dTimer.Stop();
-        }
-
-
-        private void InitBackgroundTimer()
-        {
-            AutoResetEvent autoEvent = new AutoResetEvent(false);
-            StatusChecker statusChecker = new StatusChecker();
-
-            // Create an inferred delegate that invokes methods for the timer.
-            TimerCallback tcb = statusChecker.CheckStatus;
-
-            // Create a timer that signals the delegate to invoke 
-            updateTimer = new Timer(tcb, autoEvent, 1000, 1000);
+            if (mainGrid.DataContext != null)
+                dataUpdater.UpdateInputData(mainGrid.DataContext);
         }
 
         private async void modalDlg(string title, string message)
@@ -118,10 +103,11 @@ namespace DemoPrototype
         private void PhaseShiftButton(object sender, RoutedEventArgs e)
         {
             //Just testing
-            double firstSlope = (double)PhaseVLine1.X1;
+            double firstSlope = GlobalAppSettings.SafeConvertToDouble(PhaseVLine1.X1);
+            double secondSlope = GlobalAppSettings.SafeConvertToDouble(PhaseVLine1.X2);
 
             PhaseShiftResultText.Text = firstSlope.ToString();
-            PhaseShiftValue.Text = 4.ToString();
+            PhaseShiftValue.Text = (secondSlope-firstSlope).ToString();
         }
 
         private void PhaseLine1_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)
@@ -132,31 +118,6 @@ namespace DemoPrototype
         private void PhaseLine2_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)
         {
             //Urban please replace this code with code showing diff between the lines, and center the Chartstripline
-        }
-    }
-
-
-    class StatusChecker
-    {
-        private int count;
-
-        public StatusChecker()
-        {
-            count = 0;
-        }
-
-        // This method is called by the timer delegate.
-        public void CheckStatus(Object stateInfo)
-        {
-            count++;
-            string curTime = DateTime.Now.ToString("hh:mm:ss");
-
-            if (false) {
-                //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
-                // Reset and signal Main.
-                // autoEvent.Set();
-            }
-
         }
     }
 

@@ -8,7 +8,7 @@
     xmlns:chart="using:Syncfusion.UI.Xaml.Charts"
     mc:Ignorable="d">
     <ScrollViewer>
-    <Grid Margin="10,0,10,0" >
+        <Grid  Name="mainGrid" Margin="10,0,10,0" >
         <Grid.RowDefinitions>
             <RowDefinition Height="40"></RowDefinition>
             <RowDefinition Height ="40"></RowDefinition>
