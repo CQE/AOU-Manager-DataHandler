@@ -13,7 +13,7 @@
             <ColumnDefinition Width="auto"></ColumnDefinition>
             <ColumnDefinition Width="auto"></ColumnDefinition>
             <ColumnDefinition Width="auto"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="auto"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
@@ -195,6 +195,41 @@
             </StackPanel>
 
         </StackPanel>
+
+        <StackPanel Grid.Column="3" Margin='20,0,0,0'>
+            <TextBlock FontWeight="SemiBold" Text="Current (A)"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Heating bars Phase1"></TextBlock>
+                <TextBox IsEnabled="False" Text="22"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Heating bars Phase2"></TextBlock>
+                <TextBox IsEnabled="False" Text="22"></TextBox>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Heating bars Phase3"></TextBlock>
+                <TextBox IsEnabled="False" Text="22"></TextBox>
+            </StackPanel>
+
+            <TextBlock FontWeight="SemiBold" Text="Voltage (On/Off)"></TextBlock>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Electric Phase L1"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Electric Phase L2"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+            <StackPanel Margin="5,5,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Width="140" Text="Electric Phase L3"></TextBlock>
+                <ToggleSwitch IsEnabled="False" Margin="5,0,0,0"></ToggleSwitch>
+            </StackPanel>
+
+        </StackPanel>
+
+        <GridView Grid.Column="4" Grid.ColumnSpan="2">
+            
+        </GridView>
 
 
     </Grid>
