@@ -106,8 +106,8 @@ namespace DemoPrototype
             double firstSlope = GlobalAppSettings.SafeConvertToDouble(PhaseVLine1.X1);
             double secondSlope = GlobalAppSettings.SafeConvertToDouble(PhaseVLine1.X2);
 
-            PhaseShiftResultText.Text = firstSlope.ToString();
-            PhaseShiftValue.Text = (secondSlope-firstSlope).ToString();
+            //PhaseShiftResultText.Text = firstSlope.ToString();
+            //PhaseShiftValue.Text = (secondSlope-firstSlope).ToString();
         }
 
         private void PhaseLine1_Dragged(object sender, Syncfusion.UI.Xaml.Charts.AnnotationDragCompletedEventArgs e)

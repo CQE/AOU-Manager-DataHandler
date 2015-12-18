@@ -104,9 +104,9 @@ namespace DemoPrototype
             long valTReturnActual = rnd.Next(40, 46);
             long valTReturnForecasted = rnd.Next(40, 77);
             int valState = rnd.Next(2, 7);
-            long valTBufferHot = rnd.Next(100, 200);
-            long valTBufferMid = rnd.Next(75, 150);
-            long valTBufferCold = rnd.Next(20, 100);
+            long valTBufferHot = rnd.Next(180, 200);
+            long valTBufferMid = rnd.Next(75, 110);
+            long valTBufferCold = rnd.Next(20, 40);
 
             var power = new Power()
             {
