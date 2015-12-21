@@ -119,6 +119,18 @@ namespace DemoPrototype
         {
             //Urban please replace this code with code showing diff between the lines, and center the Chartstripline
         }
+
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Stop timer and clean up
+            dTimer.Stop();
+            dTimer = null;
+            mainGrid.DataContext = null;
+        }
+
+        private void Page_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
+        {
+        }
     }
 
 
