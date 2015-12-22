@@ -25,22 +25,29 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="1"  Orientation ="Horizontal">
-          <TextBlock Text="Temperature unit to use" VerticalAlignment="Center"></TextBlock>
-            <RadioButton x:Name="TempUnitCelsius"  Content="Celsius" HorizontalAlignment="Left" Margin="10,5,0,0" Width="40" Checked="TempUnitCelsius_Checked"/>
-            <RadioButton x:Name="TempUnitFahrenheit" Content="Fahrenheit" HorizontalAlignment="Left" Margin="10,5,0,0" Width="40" Checked="TempUnitFahrenheit_Checked"/>
+            <TextBlock Width="200" VerticalAlignment="Center" Text="Temperature unit to use" ></TextBlock>
+            <RadioButton x:Name="TempUnitCelsius"  Content="Celsius"   Margin="6,0,0,0" Checked="TempUnitCelsius_Checked"/>
+            <RadioButton x:Name="TempUnitFahrenheit" Content="Fahrenheit"  Margin="10,0,0,0"  Checked="TempUnitFahrenheit_Checked"/>
         </StackPanel>
 
-            <!-- StackPanel Grid.Row="1"  Orientation ="Horizontal">
-            <TextBlock Text="Temperature unit to use"></TextBlock>
-            <ComboBox Name="UnitComboBox" SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
-                <ComboBoxItem Name="ComboBoxItemCelsius" Content="Celsius"></ComboBoxItem>
-                <ComboBoxItem Name="ComboBoxItemFarenheit" Content="Farenheit"></ComboBoxItem>
-            </ComboBox>
-        </ -->
-        
-         
-         
-        
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <TextBlock Width="200" VerticalAlignment="Center" Text="Log events to remote system"></TextBlock>
+            <ToggleSwitch  Margin="5,0,0,0" IsOn="False"></ToggleSwitch>
+            <TextBlock VerticalAlignment="Center" Margin="5,0,0,0" Text="Remote logger:"></TextBlock>
+            <TextBox Margin="5,0,0,0" Text="IP name or number"></TextBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
+            <TextBlock Width="200" VerticalAlignment="Center" Text="Change Password Admin"></TextBlock>
+            <PasswordBox Margin="5,0,0,0" Width="100" ></PasswordBox>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <TextBlock Width="200" VerticalAlignment="Center" Text="Change Password User"></TextBlock>
+            <PasswordBox Margin="5,0,0,0" Width="100"  ></PasswordBox>
+        </StackPanel>
+
 
     </Grid>
 </Page>
