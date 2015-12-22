@@ -35,9 +35,11 @@ namespace DemoPrototype
         public MainPage()
         {
             this.InitializeComponent();
-            //MyFrame.Navigate(typeof(OperatorPage));
-            TitleTextBlock.Text = "AOU Control System Main View";
+           TitleTextBlock.Text = "AOU Control System Main View";
             BackButton.Visibility = Visibility.Collapsed;
+            //want to start with Operator page, is there a better way then change
+            MyFrame.Navigate(typeof(OperatorPage));
+            TitleTextBlock.Text = "Run Injection Moulding";
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -74,19 +76,19 @@ namespace DemoPrototype
             else if (SettingsListBoxItem.IsSelected)
             {
                 MyFrame.Navigate(typeof(SettingsPage));
-                TitleTextBlock.Text = "HAOU Control System Settings View";
+                TitleTextBlock.Text = "AOU Control System Settings";
                 BackButton.Visibility = Visibility.Visible;
             }
             else if (CalibrateListBoxItem.IsSelected)
             {
                 MyFrame.Navigate(typeof(CalibratePage));
-                TitleTextBlock.Text = "AOU Control System Calibrate View";
+                TitleTextBlock.Text = "AOU Control System Calibrate";
                 BackButton.Visibility = Visibility.Visible;
             }
             else if (MaintenanceListBoxItem.IsSelected)
             {
                 MyFrame.Navigate(typeof(MaintenancePage));
-                TitleTextBlock.Text = "AOU Control System Maintenance View";
+                TitleTextBlock.Text = "AOU Control System Maintenance";
                 BackButton.Visibility = Visibility.Visible;
             }
             else if (HelpListBoxItem.IsSelected)
