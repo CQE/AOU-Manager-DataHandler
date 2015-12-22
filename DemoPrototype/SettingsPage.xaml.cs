@@ -25,23 +25,25 @@ namespace DemoPrototype
         public SettingsPage()
         {
             this.InitializeComponent();
-        }
-
-        private void CheckUnit(object sender, SelectionChangedEventArgs e)
-        {
-            
-        }
-
-        private void ComboBox_CheckUnit(object sender, SelectionChangedEventArgs e)
-        {
-            var combo = (ComboBox)sender;
-            var item = (ComboBoxItem)combo.SelectedItem;
-            string unit = item.Content.ToString();
-            if (unit == "Farenheit")
-            { GlobalAppSettings.IsCelsius = false; }
+            if (GlobalAppSettings.IsCelsius == true)
+            {
+                TempUnitCelsius.IsChecked = true;
+            }
             else
-            { GlobalAppSettings.IsCelsius = true;  }
-                        
+            {
+                TempUnitFahrenheit.IsChecked = true;
+            }
+        }
+
+        /* New to be accepted */
+        private void TempUnitCelsius_Checked(object sender, RoutedEventArgs e)
+        {
+            { GlobalAppSettings.IsCelsius = true; }
+        }
+
+        private void TempUnitFahrenheit_Checked(object sender, RoutedEventArgs e)
+        {
+            { GlobalAppSettings.IsCelsius = false; }
         }
     }
 }

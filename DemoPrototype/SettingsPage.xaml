@@ -24,14 +24,19 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-
         <StackPanel Grid.Row="1"  Orientation ="Horizontal">
+          <TextBlock Text="Temperature unit to use" VerticalAlignment="Center"></TextBlock>
+            <RadioButton x:Name="TempUnitCelsius"  Content="Celsius" HorizontalAlignment="Left" Margin="10,5,0,0" Width="40" Checked="TempUnitCelsius_Checked"/>
+            <RadioButton x:Name="TempUnitFahrenheit" Content="Fahrenheit" HorizontalAlignment="Left" Margin="10,5,0,0" Width="40" Checked="TempUnitFahrenheit_Checked"/>
+        </StackPanel>
+
+            <!-- StackPanel Grid.Row="1"  Orientation ="Horizontal">
             <TextBlock Text="Temperature unit to use"></TextBlock>
             <ComboBox Name="UnitComboBox" SelectionChanged="ComboBox_CheckUnit" Margin="10,0,0,0">
                 <ComboBoxItem Name="ComboBoxItemCelsius" Content="Celsius"></ComboBoxItem>
                 <ComboBoxItem Name="ComboBoxItemFarenheit" Content="Farenheit"></ComboBoxItem>
             </ComboBox>
-        </StackPanel>
+        </ -->
         
          
          

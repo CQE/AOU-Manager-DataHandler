@@ -4,20 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-
+using Windows.Storage;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace DemoPrototype
 {
 
+
     public static class GlobalAppSettings
     {
-        //Default is celsius
-        private static bool _isCelsius = true;
-
-        public static bool IsCelsius
+        static public bool IsCelsius
         {
-            get { return _isCelsius; }
-            set { _isCelsius = value; }
+            get
+            {
+                return ApplicationData.Current.LocalSettings.Values.ContainsKey("IsCelsius") ?
+                       (bool)ApplicationData.Current.LocalSettings.Values["IsCelsius"] : true;
+            }
+
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["IsCelsius"] = (bool)value;
+            }
         }
 
         public static double SafeConvertToDouble(object value)
