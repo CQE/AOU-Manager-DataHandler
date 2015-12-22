@@ -22,9 +22,12 @@ namespace DemoPrototype
     /// </summary>
     public sealed partial class MaintenancePage : Page
     {
+        public List<AOULogMessage> AOULogMsgs;
         public MaintenancePage()
         {
             this.InitializeComponent();
+            AOULogMsgs = AOULogMessageHandler.GetAOULogMessages();
         }
+       
     }
 }

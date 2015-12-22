@@ -10,9 +10,9 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition ></RowDefinition>
-            <RowDefinition ></RowDefinition>
-            <RowDefinition ></RowDefinition>
+            <RowDefinition  Height="50"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
@@ -24,7 +24,8 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -38,7 +39,7 @@
             Header="Tempering Delay Times (s)"
             Legend="Legend"
             Grid.Row="1"
-            Grid.RowSpan="3"
+            Grid.RowSpan="4"
             Grid.ColumnSpan="1"
             Margin="20,10,0,0">
             <chart:SfChart.PrimaryAxis>
@@ -48,18 +49,29 @@
                 <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
                 </chart:NumericalAxis>
             </chart:SfChart.SecondaryAxis>
-            <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+            <chart:LineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:LineSeries>
         </chart:SfChart>
 
-        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Content="Hot step"></Button>
-        <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Content="Cold step"></Button>
+        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="100" Content="Hot step "></Button>
+        <Button Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="100" Content="Cold step"></Button>
         <StackPanel Margin="10,0,0,0"  Orientation="Horizontal" Grid.Row="3"  Grid.Column="1" >
             <TextBlock  VerticalAlignment="Center" Text="Cycle"></TextBlock>
             <ToggleSwitch  Margin="5,0,0,0"  VerticalAlignment="Center" IsOn="False" ></ToggleSwitch>
         </StackPanel>
 
-        <TextBlock Grid.Row="1" Grid.Column="2" Text="Hot pump" VerticalAlignment="Bottom" HorizontalAlignment="Right"> </TextBlock>
-        <TextBlock Grid.Row="2" Grid.Column="2" Text="Cold pump" VerticalAlignment="Bottom" HorizontalAlignment="Right"></TextBlock>
+        <TextBlock Grid.Column="3" VerticalAlignment="Bottom"  Text="Calibrate"></TextBlock>
+        <TextBlock Grid.Column="4" VerticalAlignment="Bottom" Text="Tune"></TextBlock>
+        <TextBlock Grid.Column="5" VerticalAlignment="Bottom" Text="Total"></TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="Hot pump" VerticalAlignment="Bottom" HorizontalAlignment="Center"> </TextBlock>
+        <TextBox Grid.Row="1"  VerticalAlignment="Bottom" Grid.Column="3" Text="8"></TextBox>
+        <TextBox Grid.Row="1" VerticalAlignment="Bottom" Grid.Column="4" Text="2"></TextBox>
+        <TextBox Grid.Row="1" VerticalAlignment="Bottom" Grid.Column="5" Text="10"></TextBox>
+
+        <TextBlock Grid.Row="2" Grid.Column="2" Text="Cold pump" VerticalAlignment="Bottom" HorizontalAlignment="Center"></TextBlock>
+        <TextBox Grid.Row="2"  VerticalAlignment="Bottom" Grid.Column="3" Text="10"></TextBox>
+        <TextBox Grid.Row="2" VerticalAlignment="Bottom" Grid.Column="4" Text="0"></TextBox>
+        <TextBox Grid.Row="2" VerticalAlignment="Bottom" Grid.Column="5" Text="10"></TextBox>
+
 
         <chart:SfChart  
             Header="Energy Balance"
@@ -72,10 +84,12 @@
                 <chart:CategoryAxis ></chart:CategoryAxis>
             </chart:SfChart.PrimaryAxis>
             <chart:SfChart.SecondaryAxis>
-                <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
+                <chart:NumericalAxis  Interval="10" EnableAutoIntervalOnZooming="False">
                 </chart:NumericalAxis>
             </chart:SfChart.SecondaryAxis>
-            <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+            <chart:LineSeries XBindingPath="ElapsedTime" YBindingPath="THotTank" ItemsSource="{Binding power}"></chart:LineSeries>
+            <chart:LineSeries XBindingPath="ElapsedTime" YBindingPath="TCoolTank" ItemsSource="{Binding power}"></chart:LineSeries>
+            <chart:LineSeries XBindingPath="ElapsedTime" YBindingPath="TReturnValve" ItemsSource="{Binding power}"></chart:LineSeries>
         </chart:SfChart>
 
         <chart:SfChart  
@@ -84,16 +98,19 @@
             Grid.Row="6"
              Grid.Column="2"
             Grid.RowSpan="3"
-            Grid.ColumnSpan="2"
+            Grid.ColumnSpan="3"
             Margin="20,10,0,0">
         <chart:SfChart.PrimaryAxis>
             <chart:CategoryAxis ></chart:CategoryAxis>
         </chart:SfChart.PrimaryAxis>
         <chart:SfChart.SecondaryAxis>
-            <chart:NumericalAxis  Interval="1" EnableAutoIntervalOnZooming="False">
+            <chart:NumericalAxis  Interval="10" EnableAutoIntervalOnZooming="False">
             </chart:NumericalAxis>
         </chart:SfChart.SecondaryAxis>
-        <chart:StepLineSeries LegendIcon="Diamond" Label="TReturn" XBindingPath="ElapsedTime" YBindingPath="State" ItemsSource="{Binding power}"></chart:StepLineSeries>
+        <chart:LineSeries  XBindingPath="ElapsedTime" YBindingPath="TBufferHot" ItemsSource="{Binding power}"></chart:LineSeries>
+        <chart:LineSeries  XBindingPath="ElapsedTime" YBindingPath="TBufferCold" ItemsSource="{Binding power}"></chart:LineSeries>
+        <chart:LineSeries  XBindingPath="ElapsedTime" YBindingPath="TBufferMid" ItemsSource="{Binding power}"></chart:LineSeries>
+
         </chart:SfChart>
 
     </Grid>

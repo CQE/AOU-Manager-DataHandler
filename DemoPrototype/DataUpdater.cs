@@ -196,4 +196,33 @@ namespace DemoPrototype
 
 
     }
+
+    public class AOULogMessage
+    {
+        //check current solution for correct format
+        public long AOUTimeStamp;
+        public string AOUMessage;
+        private int v1;
+        private string v2;
+
+        public AOULogMessage(int v1, string v2)
+        {
+            this.v1 = v1;
+            this.v2 = v2;
+        }
+    }
+    public class AOULogMessageHandler
+    {
+        //replace this with correct error handler later, this code is for GUI testing only
+        public static List<AOULogMessage> GetAOULogMessages()
+        {
+            var logMessages = new List<AOULogMessage>();
+            logMessages.Add(new AOULogMessage(1, "message 1"));
+            logMessages.Add(new AOULogMessage(2, "message 2"));
+            logMessages.Add(new AOULogMessage(3, "message 3"));
+            logMessages.Add(new AOULogMessage(4, "message 4"));
+            return logMessages;
+        }
+    }
+
 }
