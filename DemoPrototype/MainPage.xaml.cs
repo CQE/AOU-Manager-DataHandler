@@ -18,6 +18,7 @@ using Windows.Web;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.ApplicationModel;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -29,8 +30,8 @@ namespace DemoPrototype
     public sealed partial class MainPage : Page
     {
 
-        WebView webView;
-        StreamUriWinRTResolver myResolver;
+        static WebView webView;
+        static StreamUriWinRTResolver myResolver;
 
         public MainPage()
         {
@@ -40,6 +41,9 @@ namespace DemoPrototype
             //want to start with Operator page, is there a better way then change
             MyFrame.Navigate(typeof(OperatorPage));
             TitleTextBlock.Text = "Run Injection Moulding";
+            //create these only once
+            webView = new WebView();
+            myResolver = new StreamUriWinRTResolver();
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -57,14 +61,14 @@ namespace DemoPrototype
 
         private void ListBox_Changed(object sender, SelectionChangedEventArgs e)
         {
-            if (myResolver != null)
+            /*if (myResolver != null)
             {
                 myResolver = null; // Remove from memory
             }
             if (webView != null)
             {
                 webView = null; // Remove from memory
-            }
+            }*/
 
             if (OperatorListBox.IsSelected)
             {
@@ -99,17 +103,27 @@ namespace DemoPrototype
             }
             else if (AboutListBoxItem.IsSelected)
             {
-                TitleTextBlock.Text = "About AOU Control System";
+                //we show version number after the title until a better place is decided
+                string version = GetAppVersion();
+                string AboutHeader = "About AOU Control System " + version;
+                TitleTextBlock.Text = AboutHeader;
                 BackButton.Visibility = Visibility.Collapsed;
                 DisplayHtml("About");
             }
         }
 
+        private string GetAppVersion()
+        {
+            Package package = Package.Current;
+            PackageId packageId = package.Id;
+            PackageVersion version = packageId.Version;
+
+            return string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
+           // throw new NotImplementedException();
+        }
+
         public void DisplayHtml(string htmlPage)
         {
-            webView = new WebView();
-            myResolver = new StreamUriWinRTResolver();
-
             Uri uri = webView.BuildLocalStreamUri("page3", "/Assets/" + htmlPage + ".html");
             webView.NavigateToLocalStreamUri(uri, myResolver);
             MyFrame.Content = webView;
@@ -153,6 +167,8 @@ namespace DemoPrototype
             }
             catch (Exception) { throw new Exception("Invalid path"); }
         }
+
+       
     }
 
 }
