@@ -41,5 +41,32 @@ namespace DataHandler
             return power;
         }
 
+
+        static public bool GetRandomOk(int max)
+        {
+            long value = rnd.Next(0, max);
+            return (value == 0);
+        }
+
+        static public char GetRandomAsciiChar(char lowestChar, char highestChar)
+        {
+            return (char)(byte)rnd.Next((int)lowestChar, (int)highestChar);
+        }
+
+        static public AOULogMessage GetRandomLogMsg()
+        {
+            uint ts = (uint)((ulong)DateTime.Now.Ticks / (ulong)10000); // 100 ns to s
+            uint prio = (uint)rnd.Next(1, 3);
+            uint pid = (uint)rnd.Next(1038, 1965);
+            string logtext = "log-";
+            for (int i = 0; i < 8; i++)
+            {
+                
+                logtext += ValueGenerator.GetRandomAsciiChar('0', 'Z');
+            }
+
+            return new AOULogMessage(ts, logtext, prio, pid);
+        }
+
     }
 }

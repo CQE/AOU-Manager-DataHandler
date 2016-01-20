@@ -78,20 +78,32 @@ namespace DataHandler
     public class AOULogMessage
     {
         //check current solution for correct format
-        public long AOUTimeStamp
+        public long time
         {
             get; set;
         }
 
-        public string AOUMessage
+        public string message
         {
             get; set;
         }
 
-        public AOULogMessage(int v1, string v2)
+        public uint pid
         {
-            AOUTimeStamp = v1;
-            AOUMessage = v2;
+            get; set;
+        }
+
+        public uint prio
+        {
+            get; set;
+        }
+
+        public AOULogMessage(uint logTime, string logMsg, uint logPrio, uint logProcessId)
+        {
+            time = logTime;
+            message = logMsg;
+            prio = logPrio;
+            pid = logProcessId;
         }
     }
 
