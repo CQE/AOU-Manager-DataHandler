@@ -11,6 +11,9 @@ namespace DataHandler
     {
         // Different Run types. File and Random are test modes
         public enum RunType {Serial, File, Random};
+        public const int MaxRandomCount = 50;
+
+        AOUSerialData serialData;
 
         public RunType runMode {
             get; set;
@@ -42,19 +45,27 @@ namespace DataHandler
             runMode = mode;
             if (runMode==RunType.Random)
             {
-                InitRandom();
+                InitRandom(MaxRandomCount);
+            }
+            else if (runMode == RunType.File)
+            {
+                LoadTestFile();
+            }
+            else if (runMode == RunType.Serial)
+            {
+                serialData = new AOUSerialData();
             }
         }
 
-        public void InitRandom()
+        public void InitRandom(int count)
         {
             lastLogMessageCount = 0; // Ready to get
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < count; i++)
             {
                 logMessages.Add(ValueGenerator.GetRandomLogMsg());
             }
 
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < count; i++)
             {
                 powerValues.Add(ValueGenerator.GetRandomPower());
             }
@@ -75,7 +86,7 @@ namespace DataHandler
                 dataFile.AddToFile("AOU\\TBufferCold\\", "TBufferCold-" + dateStr + ".txt", ts + pwr.TBufferCold);
                 dataFile.AddToFile("AOU\\TBufferMid\\", "TBufferMid-" + dateStr + ".txt", ts + pwr.TBufferMid);
                 dataFile.AddToFile("AOU\\TBufferHot\\", "TBufferHot-" + dateStr + ".txt", ts + pwr.TBufferHot);
-                dataFile.AddToFile("AOU\\TCoolTank\\", "TCoolTank-" + dateStr + ".txt", ts + pwr.TCoolTank);
+                dataFile.AddToFile("AOU\\TCoolTank\\", "TCoolTank-" + dateStr + ".txt", ts + pwr.TColdTank);
                 dataFile.AddToFile("AOU\\THotTank\\", "THotTank-" + dateStr + ".txt", ts + pwr.THotTank);
                 dataFile.AddToFile("AOU\\State\\", "State-" + dateStr + ".txt", ts + pwr.State);
                 dataFile.AddToFile("AOU\\TReturnActual\\", "TReturnActual-" + dateStr + ".txt", ts + pwr.TReturnActual);
@@ -84,16 +95,25 @@ namespace DataHandler
             }
         }
 
-        public void Update()
+        public void Update(int maxTotal)
         {
             if (runMode == RunType.Random)
             {
                 if (ValueGenerator.GetRandomOk(50))
                 {
                     logMessages.Add(ValueGenerator.GetRandomLogMsg());
+                    if (logMessages.Count > maxTotal)
+                    {
+                        logMessages.RemoveAt(0);
+                    }
                 }
 
                 powerValues.Add(ValueGenerator.GetRandomPower());
+                if (powerValues.Count > maxTotal)
+                {
+                    powerValues.RemoveAt(0);
+                }
+
  
             }
             else if (runMode == RunType.File)
@@ -102,7 +122,7 @@ namespace DataHandler
             }
             else if (runMode == RunType.Serial)
             {
-                // ToDo: From Serial Port
+                powerValues.Add(serialData.GetLatestValues();
             }
             // SaveValuesToFile(new Power[] { pwr });
         }
@@ -125,11 +145,6 @@ namespace DataHandler
         {
             lastPowerValuesCount = powerValues.Count;
             return powerValues[lastPowerValuesCount-1];
-        }
-
-        public int[] GetPowerValuesFastData()
-        {
-            return new int[] { 1, 2, 3, 4, 5, 6 };
         }
 
         /**************************
