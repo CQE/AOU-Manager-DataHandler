@@ -35,12 +35,18 @@ namespace DataHandler
 
         StorageFolder dataFolder;
 
+        public string StrData { get; private set; }
+
+        public bool NewTextLoaded { get; private set; }
+
         public TextFile()
         {
             /*  Most safe to use this. Belongs to User and not App.
                 Capabilities for Pictures Library must be enabled in project properties
             */
             dataFolder = KnownFolders.PicturesLibrary;
+            StrData = "";
+            NewTextLoaded = false;
         }
 
         public async void SaveToFileAsync(StorageFile f, string content)
@@ -108,6 +114,22 @@ namespace DataHandler
             }
         }
 
+        public async void OpenFileIfExistAndGetText(string subPath, string fileName)
+        {
+            try
+            {
+                 StorageFile f = await dataFolder.GetFileAsync(subPath + "\\" + fileName);
+                // C:\Users\MiaW\Pictures\AOUTest + 
+                StrData = await FileIO.ReadTextAsync(f);
+                NewTextLoaded = true;
+                 // ReadStrDataFromFileAsync(f);
+            }
+            catch (Exception ex)
+            {
+                FileLog.AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
+            }
+        }
+
 
         public async void ReadStrDataFromFileAsync(StorageFile f)
         {
@@ -115,23 +137,23 @@ namespace DataHandler
             uint byteArrLength = 64;
             try
             {
-                string s = "";
+                StrData = "";
 
                 using (var inputStream = await f.OpenSequentialReadAsync())
                 {
-                    var dataReader = new Windows.Storage.Streams.DataReader(inputStream);
+                    var dataReader = new DataReader(inputStream);
                     var numBytes = await dataReader.LoadAsync(chunkSize);
                     byte[] bytes;
                     do
                     {
-                        if ((numBytes - s.Length) < byteArrLength)
-                            bytes = new byte[numBytes - s.Length];
+                        if ((numBytes - StrData.Length) < byteArrLength)
+                            bytes = new byte[numBytes - StrData.Length];
                         else
                             bytes = new byte[byteArrLength];
 
                         dataReader.ReadBytes(bytes);
-                        s += Encoding.ASCII.GetString(bytes);
-                    } while (s.Length < numBytes);
+                        StrData += Encoding.ASCII.GetString(bytes);
+                    } while (StrData.Length < numBytes);
                 }
             }
             catch (Exception ex)

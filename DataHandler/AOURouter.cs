@@ -28,6 +28,16 @@ namespace DataHandler
         int lastLogMessageCount;
         int lastPowerValuesCount;
 
+        public bool IsFileDataAvailable()
+        {
+            return dataFile.NewTextLoaded;
+        }
+
+        public string GetFileData()
+        {
+            return dataFile.StrData;
+        }
+
         public AOURouter()
         {
             dataFile = new TextFile();
@@ -49,7 +59,7 @@ namespace DataHandler
             }
             else if (runMode == RunType.File)
             {
-                LoadTestFile();
+                LoadTestFile(3);
             }
             else if (runMode == RunType.Serial)
             {
@@ -72,9 +82,11 @@ namespace DataHandler
 
         }
 
-        public void LoadTestFile()
-        {
-
+        public void LoadTestFile(int id)
+        { 
+            dataFile.OpenFileIfExistAndGetText("AOUTest", "aou"+id);
+            String s = dataFile.StrData;
+            bool b = dataFile.NewTextLoaded;
         }
 
         public void SaveValuesToFile(Power[] powers)
@@ -113,8 +125,6 @@ namespace DataHandler
                 {
                     powerValues.RemoveAt(0);
                 }
-
- 
             }
             else if (runMode == RunType.File)
             {
@@ -122,8 +132,9 @@ namespace DataHandler
             }
             else if (runMode == RunType.Serial)
             {
-                powerValues.Add(serialData.GetLatestValues();
+                powerValues.Add(serialData.GetLatestValues());
             }
+
             // SaveValuesToFile(new Power[] { pwr });
         }
 
