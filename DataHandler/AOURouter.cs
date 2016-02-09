@@ -9,6 +9,12 @@ namespace DataHandler
 {
     public class AOURouter
     {
+        // "Idle","Heating","Cooling","Fixed Cycling", "Auto with IMM"
+        public enum AOUCommandType { idleMode, heatingMode, coolingMode, fixedCyclingMode, autoWidthIMMMode,
+                                     tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
+                                     toolHeatingFeedPause, toolCoolingFeedPause
+                                   }
+
         // Different Run types. File and Random are test modes
         public enum RunType {Serial, File, Random};
         public const int MaxRandomCount = 50;
@@ -78,6 +84,44 @@ namespace DataHandler
             for (int i = 0; i < count; i++)
             {
                 powerValues.Add(ValueGenerator.GetRandomPower());
+            }
+
+        }
+
+        public void SendToPlc(string text)
+        {
+            if (runMode == RunType.Random)
+            {
+                // Save to log file
+            }
+            else if (runMode == RunType.File)
+            {
+                // Save to log file
+            }
+            else if (runMode == RunType.Serial)
+            {
+                serialData.SendData(text);
+            }
+        }
+
+        public void SendCommandToPlc(AOUCommandType cmd, int value)
+        {
+            switch (cmd)
+            {
+                case AOUCommandType.tempHotTankFeedSet:
+                    SendToPlc(String.Format("<cmd><tempHotTankFeedSet>{0}</tempHotTankFeedSet></cmd>", value)); break;
+                case AOUCommandType.tempColdTankFeedSet:
+                    SendToPlc(String.Format("<cmd><tempColdTankFeedSet>{0}</tempColdTankFeedSet></cmd>", value)); break;
+                case AOUCommandType.coolingTime:
+                    SendToPlc(String.Format("<cmd><coolingTime>{0}</coolingTime></cmd>", value)); break;
+                case AOUCommandType.heatingTime:
+                    SendToPlc(String.Format("<cmd><heatingTime>{0}</heatingTime></cmd>", value)); break;
+                case AOUCommandType.toolHeatingFeedPause:
+                    SendToPlc(String.Format("<cmd><toolHeatingFeedPause>{0}</toolHeatingFeedPause></cmd>", value)); break;
+                    /*
+                case AOUCommandType.:
+                    SendToPlc(String.Format("<cmd></cmd>"); break;
+                    */
             }
 
         }
