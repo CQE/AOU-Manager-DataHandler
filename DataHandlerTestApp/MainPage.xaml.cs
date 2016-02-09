@@ -23,10 +23,68 @@ namespace DataHandlerTestApp
 { 
     public sealed partial class MainPage : Page
     {
+        AOURouter router;
 
-        AOURouter router = new AOURouter(AOURouter.RunType.File);
+        public MainPage()
+        {
+            this.InitializeComponent();
+            router = new AOURouter(AOURouter.RunType.File);
+        }
 
-        private void AOURoterRandomTest()
+        private void AOUSerielTest()
+        {
+            if (router.IsFileDataAvailable())
+            {
+                this.textBox.Text = router.GetFileData();
+            }
+            else
+            {
+                this.textBox.Text = "File not loaded";
+            }
+        }
+
+        private void TestLoadedFileButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (router.IsFileDataAvailable())
+            {
+                List<AOULogMessage> logList;
+                List<Power> pwrList = router.GetFileDataList(out logList);
+                if (logList.Count > 0)
+                {
+                    foreach (var log in logList)
+                    {
+                        this.textBox.Text += String.Format("Log time:{0}, Log:{1}\r\n", log.time, log.message);
+                    }
+                }
+                else
+                {
+                    this.textBox.Text += "No Log data\r\n";
+                }
+
+                if (pwrList.Count > 0)
+                {
+                    foreach (var power in pwrList)
+                    {
+                        this.textBox.Text += String.Format("Time:{0}, State:{1}", power.ElapsedTime, power.State);
+                        this.textBox.Text += String.Format(", Hot tank temp:{0}, Cold tank temp:{1}, cool temp:{2}", power.THotTank, power.TColdTank, 0);
+                        this.textBox.Text += String.Format(", Return Actual:{0}, Return Forecasted:{1}, Valve return:{2}\r\n", power.TReturnActual, power.TReturnForecasted, power.TReturnValve);
+                        //this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n");
+                    }
+                }
+                else
+                {
+                    this.textBox.Text += "No Power data\r\n";
+                }
+
+            }
+            else
+            {
+                this.textBox.Text = "No Filedata loaded\r\n";
+            }
+        }
+
+        private void TestRandomData_Click(object sender, RoutedEventArgs e)
         {
             AOURouter r = new AOURouter(AOURouter.RunType.Random);
 
@@ -47,118 +105,15 @@ namespace DataHandlerTestApp
             bool ok = bm == bp;
         }
 
-        private void AOUSerielTest()
+        private void LoadFileButton_Click(object sender, RoutedEventArgs e)
         {
-            if (router.IsFileDataAvailable())
-            {
-                this.textBox.Text = router.GetFileData();
-            }
-            else
-            {
-                this.textBox.Text = "File not loaded";
-            }
+            router.LoadTestFile(this.fileName.Text);
         }
 
-        public MainPage()
+        private void TestSerialComButton_Click(object sender, RoutedEventArgs e)
         {
-            this.InitializeComponent();
+            AOUSerialData sdata = new AOUSerialData("com3");
 
-            //AOUSerialData sdata = new AOUSerialData();
-            router = new AOURouter(AOURouter.RunType.File);
-        }
-
-        private void FileTestButton_Click(object sender, RoutedEventArgs e)
-        {
-            long time_ms = 0;
-
-            double hot_tank_temp = 0;
-            double cold_tank_temp = 0;
-            double valve_return_temp = 0;
-            double cool_temp = 0;
-
-            int seqState = 0;
-
-            string logMsg = "";
-
-            double valvesRetPrev = 0;
-            double valvesRetNew = 0;
-
-            double feedHotPrev = 0;
-            double feedHotNew = 0;
-            double feedColdPrev = 0;
-            double feedColdNew = 0;
-
-            int count = 0;
-            bool ok = true;
-            string nextTag = "dummy";
-
-            if (router.IsFileDataAvailable())
-            {
-                string text = router.GetFileData();
-                while (ok && nextTag.Length > 0 &&  text.Length > 0)
-                {
-                    count = 0;
-                    nextTag = AOUInputParser.GetNextTag(text);
-                    if (AOUInputParser.IsNextTag(AOUInputParser.tagTemperature, nextTag))
-                    {
-                        ok = AOUInputParser.ParseTemperature(text, out time_ms, out hot_tank_temp, out cold_tank_temp,
-                                                                  out valve_return_temp, out cool_temp, out count);
-                    }
-                    else if (AOUInputParser.IsNextTag(AOUInputParser.tagSequence, nextTag))
-                    {
-                        ok = AOUInputParser.ParseSequence(text, out time_ms, out seqState, out count);
-                    }
-                    else if (AOUInputParser.IsNextTag(AOUInputParser.tagFeeds, nextTag))
-                    {
-                        ok = AOUInputParser.ParseFeeds(text, out time_ms, out feedHotPrev, out feedHotNew, out feedColdPrev, out feedColdNew, out count);
-                    }
-                    else if (AOUInputParser.IsNextTag(AOUInputParser.tagValves, nextTag))
-                    {
-                        ok = AOUInputParser.ParseValves(text, out time_ms, out valvesRetPrev, out valvesRetNew, out count);
-                    }
-                    else if (AOUInputParser.IsNextTag(AOUInputParser.tagLog, nextTag))
-                    {
-                        ok = AOUInputParser.ParseLog(text, out time_ms, out logMsg, out count);
-                    }
-
-                    if (ok)
-                    {
-                        if (AOUInputParser.IsNextTag(AOUInputParser.tagTemperature, nextTag))
-                        {
-                            this.textBox.Text += String.Format("Temperature time:{0}, hot tank:{1}, cold tank:{2}, valve return:{3}, cool temp:{4}\r\n",
-                                                                time_ms, hot_tank_temp, cold_tank_temp, valve_return_temp, cool_temp);
-                        }
-                        else if (AOUInputParser.IsNextTag(AOUInputParser.tagSequence, nextTag))
-                        {
-                            this.textBox.Text += String.Format("Sequence time:{0},sequence:{1}\r\n", time_ms, seqState);
-                        }
-                        else if (AOUInputParser.IsNextTag(AOUInputParser.tagFeeds, nextTag))
-                        {
-                            this.textBox.Text += String.Format("Feeds time:{0}, hot tank:{1}, cold tank:{2}, valve return:{3}, cool temp:{4}\r\n",
-                                                                time_ms, feedHotPrev, feedHotNew, feedColdPrev, feedColdNew);
-                        }
-                        else if (AOUInputParser.IsNextTag(AOUInputParser.tagValves, nextTag))
-                        {
-                            this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n",
-                                                                time_ms, valvesRetPrev, valvesRetNew);
-                        }
-                        else if (AOUInputParser.IsNextTag(AOUInputParser.tagLog, nextTag))
-                        {
-                            this.textBox.Text += String.Format("Log time:{0}, Log:{1}\r\n", logMsg);
-                        }
-                        else
-                        {
-                            this.textBox.Text += "Tag not recognized: " + nextTag + "\r\n";
-                        }
-                    }
-                    text = text.Substring(count);
-                }
-
-            }
-            else
-            {
-                this.textBox.Text = "No Filedata loaded";
-            }
         }
     }
 }

@@ -49,7 +49,7 @@ namespace DataHandler
             NewTextLoaded = false;
         }
 
-        public async void SaveToFileAsync(StorageFile f, string content)
+        private async void SaveToFileAsync(StorageFile f, string content)
         {
             try
             {
@@ -70,7 +70,7 @@ namespace DataHandler
             }
         }
 
-        public async void AddToFileAsync(StorageFile f, string lineOfText)
+        private async void AddToFileAsync(StorageFile f, string lineOfText)
         {
             try
             {
@@ -114,72 +114,24 @@ namespace DataHandler
             }
         }
 
-        public async void OpenFileIfExistAndGetText(string subPath, string fileName)
+
+
+        /***********************/
+        /* public from here    */
+        /***********************/
+        public async void OpenFileIfExistAndGetText(string fileName)
         {
             try
             {
-                 StorageFile f = await dataFolder.GetFileAsync(subPath + "\\" + fileName);
-                // C:\Users\MiaW\Pictures\AOUTest + 
+                StorageFile f = await dataFolder.GetFileAsync(fileName);
                 StrData = await FileIO.ReadTextAsync(f);
                 NewTextLoaded = true;
-                 // ReadStrDataFromFileAsync(f);
             }
             catch (Exception ex)
             {
                 FileLog.AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
             }
         }
-
-
-        public async void ReadStrDataFromFileAsync(StorageFile f)
-        {
-            uint chunkSize = 4096;
-            uint byteArrLength = 64;
-            try
-            {
-                StrData = "";
-
-                using (var inputStream = await f.OpenSequentialReadAsync())
-                {
-                    var dataReader = new DataReader(inputStream);
-                    var numBytes = await dataReader.LoadAsync(chunkSize);
-                    byte[] bytes;
-                    do
-                    {
-                        if ((numBytes - StrData.Length) < byteArrLength)
-                            bytes = new byte[numBytes - StrData.Length];
-                        else
-                            bytes = new byte[byteArrLength];
-
-                        dataReader.ReadBytes(bytes);
-                        StrData += Encoding.ASCII.GetString(bytes);
-                    } while (StrData.Length < numBytes);
-                }
-            }
-            catch (Exception ex)
-            {
-                FileLog.AddLog("ReadStrDataFromFileAsync Error: " + ex.Message);
-            }
-        }
-
-        public async void ReadFromFileAsync(StorageFile f)
-        {
-            try
-            {
-                using (var inputStream = await f.OpenSequentialReadAsync())
-                {
-                    using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
-                    {
-                        var bdata = dataReader.ReadBuffer(1024);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                FileLog.AddLog("ReadFromFileAsync Error: " + ex.Message);
-            }
-        }
-
 
         public FileResult SaveToFile(string subPath, string fileName, string textContent)
         {

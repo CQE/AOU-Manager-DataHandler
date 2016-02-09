@@ -30,6 +30,8 @@ namespace DataHandler
         public const string tagValves = "valves";
         public const string tagLog = "log";
 
+        public enum FeedType { unknown, cold, hot};
+
         public static string GetNextTag(string textLine)
         {
             Regex r = new Regex("<[a-zA-Z]+>");
@@ -40,9 +42,21 @@ namespace DataHandler
                 return "";
         }
 
-        public static bool IsNextTag(string tag, string tagFound)
+        public static bool FindTag(string tag, string textLine)
         {
-            return tag == tagFound;
+            string startTag = "<" + tag + ">";
+            string endTag = "</" + tag + ">";
+            int pos1 = textLine.IndexOf(startTag);
+            int pos2 = textLine.IndexOf(endTag);
+            if (pos1 != -1 && pos2 != -1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
         }
 
         public static bool FindTagAndExtractText(string tag, string textLine, out string tagText, out int endPos)
@@ -56,6 +70,7 @@ namespace DataHandler
                 pos1 += startTag.Length;
                 tagText = textLine.Substring(pos1, pos2 - pos1);
                 endPos = pos2 + endTag.Length;
+                tagText = tagText.Trim();
                 return true;
             }
             else
@@ -81,13 +96,24 @@ namespace DataHandler
             }
         }
 
-        public static bool Parsedouble(string tagText, string textline, out double value)
+        public static bool Parsedouble(string tag, string textline, out double value)
         {
             int endpos = 0;
-            if (FindTagAndExtractText(tagText, textline, out tagText, out endpos) &&
-                double.TryParse(tagText, out value))
+            string tagValue = "";
+            bool b = FindTagAndExtractText(tag, textline, out tagValue, out endpos);
+
+            if (b)
             {
-                return true;
+                tagValue.Replace(',', '.');
+                if (double.TryParse(tagValue, out value))
+                {
+                    return true;
+                }
+                else
+                {
+                    value = 0;
+                    return false;
+                }
             }
             else
             {
@@ -147,10 +173,10 @@ namespace DataHandler
 
             string tempText = "";
             time_ms = 0;
-            hot_tank_temp = 0.0;
-            cold_tank_temp = 0.0;
-            valve_return_temp = 0.0;
-            cool_temp = 0.0;
+            hot_tank_temp = double.NaN;
+            cold_tank_temp = double.NaN;
+            valve_return_temp = double.NaN;
+            cool_temp = double.NaN;
 
             if (FindTagAndExtractText("temperature", textLine, out tempText, out endpos))
             {
@@ -177,17 +203,17 @@ namespace DataHandler
 
         public static bool ParseValves(string textLine, out long time_ms, out double valvesRetPrev, out double valvesRetNew, out int endpos)
         {
-            textLine = "<valves><Time>104903816</Time><Ret><Prev>93</Prev><New>80</New></Ret></valves>";
+            // textLine = "<valves><Time>104903816</Time><Ret><Prev>93</Prev><New>80</New></Ret></valves>";
             string tempText = "";
             time_ms = 0;
-            valvesRetPrev = 0.0;
-            valvesRetNew = 0.0;
+            valvesRetPrev = double.NaN;
+            valvesRetNew = double.NaN;
 
             if (FindTagAndExtractText("valves", textLine, out tempText, out endpos))
             {
-                if (ParseLongTime(tempText, out time_ms) &&
-                    Parsedouble("Hot", tempText, out valvesRetPrev) &&
-                    Parsedouble("Cold", tempText, out valvesRetNew))
+                 if (ParseLongTime(tempText, out time_ms) &&
+                    Parsedouble("Prev", tempText, out valvesRetPrev) &&
+                    Parsedouble("New", tempText, out valvesRetNew))
                 {
                     return true;
                 }
@@ -199,17 +225,36 @@ namespace DataHandler
             return false;
         }
 
-        public static bool ParseFeeds(string textLine, out long time_ms, out double feedHotPrev, out double feedHotNew, out double feedColdPrev, out double feedcoldNew, out int endpos)
+        public static bool ParseFeeds(string textLine, out long time_ms, out FeedType feed, out double previousFeed, out double newFeed, out int endpos)
         {
-            textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
-            textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
+            // textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
+            // textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
             string tempText = "";
             time_ms = 0;
-            feedHotPrev = 0;
-            feedHotNew = 0;
-            feedColdPrev = 0;
-            feedcoldNew = 0;
-            endpos = 0;
+            feed = FeedType.unknown;
+            previousFeed = double.NaN;
+            newFeed = double.NaN;
+            if (FindTagAndExtractText("feeds", textLine, out tempText, out endpos))
+            {
+                if (FindTag("Hot", tempText))
+                {
+                    feed = FeedType.hot;
+                }
+                else if (FindTag("Cold", tempText))
+                {
+                    feed = FeedType.cold;
+                }
+                if (ParseLongTime(tempText, out time_ms) &&
+                    Parsedouble("Prev", tempText, out previousFeed) &&
+                    Parsedouble("New", tempText, out newFeed))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
             return false;
         }
 
@@ -218,11 +263,11 @@ namespace DataHandler
             string tempText;
             time_ms = 0;
             logMsg = "";
-            textLine = "<log><Time>94962045</Time><Msg>Setup AOU version 1.1 ready (Plastics Unbound Ltd, Cyprus)</Msg></log>";
-            if (FindTagAndExtractText("valves", textLine, out tempText, out endpos))
+            // textLine = "<log><Time>94962045</Time><Msg>Setup AOU version 1.1 ready (Plastics Unbound Ltd, Cyprus)</Msg></log>";
+            if (FindTagAndExtractText("log", textLine, out tempText, out endpos))
             {
                 if (ParseLongTime(tempText, out time_ms) &&
-                    ParseString("Hot", tempText, out logMsg))
+                    ParseString("Msg", tempText, out logMsg))
                 {
                     return true;
                 }
@@ -237,15 +282,23 @@ namespace DataHandler
             }
         }
 
-        public static bool ParseSequence(string textLine, out long time_ms, out int state, out int endpos)
+        public static bool ParseSequence(string textLine, out long time_ms, out string state, out int endpos)
         {
             string tempText;
             time_ms = 0;
-            state = 0;
+            state = "";
 
             if (FindTagAndExtractText("seq", textLine, out tempText, out endpos))
             {
-                return true;
+                if (ParseLongTime(tempText, out time_ms) &&
+                    ParseString("State", tempText, out state))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else
             {

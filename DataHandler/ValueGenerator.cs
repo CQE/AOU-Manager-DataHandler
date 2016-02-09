@@ -13,53 +13,38 @@ namespace DataHandler
 
         static public Power GetRandomPower()
         {
-            long[] onOffArr = new long[] { 50, 70 };
+            double[] onOffArr = new double[] { 50, 70 };
+
             if (ts_start == -1)
                 ts_start = DateTime.Now.Ticks;
 
             TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start);
-            long tsSeconds = ts.Hours * 60 * 60 + ts.Minutes * 60 + ts.Seconds;
+            int tsSeconds = ts.Hours * 60 * 60 + ts.Minutes * 60 + ts.Seconds;
             // Todo tsDay - or add day
 
-            /*
-            int index = rnd.Next(1, 7);
-            AOUTypes.StateType state;
-            switch (index)
-            {
-                case 2: state = AOUTypes.StateType.state2; break;
-                case 3: state = AOUTypes.StateType.state3; break;
-                case 4: state = AOUTypes.StateType.state4; break;
-                case 5: state = AOUTypes.StateType.state5; break;
-                case 6: state = AOUTypes.StateType.state6; break;
-                case 7: state = AOUTypes.StateType.state7; break;
-                default: state = AOUTypes.StateType.state1; break;
+            AOUTypes.StateType valState = (AOUTypes.StateType)rnd.Next(1, AOUTypes.NumStates + 1);
 
-            }
-            */
-
-            long valState = rnd.Next(1, 7);
-
-            long valTHotTank = rnd.Next(204, 235);
-            long valTCoolTank = rnd.Next(31, 45);
-            long valTReturnValve = rnd.Next(40, 87);
-            long valTReturnActual = rnd.Next(40, 46);
-            long valTReturnForecasted = rnd.Next(40, 77);
-            long valTBufferHot = rnd.Next(180, 200);
-            long valTBufferMid = rnd.Next(75, 110);
-            long valTBufferCold = rnd.Next(20, 40);
-            long valTheaterOilOut = rnd.Next(250, 290);
-            long valValveFeedHot = RandomFromIntArray(onOffArr, 0); // Off=50, On=70
-            long valValveFeedCold = RandomFromIntArray(onOffArr, 0); // Off=50, On=70
-            long valValveReturn = RandomFromIntArray(onOffArr, 0); // Cold=50, Hot=70
-            long valValveCoolant = rnd.Next(50, 90); // 0-100%, 50-90
-            long valPowerHeating = rnd.Next(5, 12); // 0-14kW ?
+            double valTHotTank = rnd.Next(204, 235);
+            double valTCoolTank = rnd.Next(31, 45);
+            double valTReturnValve = rnd.Next(40, 87);
+            double valTReturnActual = rnd.Next(40, 46);
+            double valTReturnForecasted = rnd.Next(40, 77);
+            double valTBufferHot = rnd.Next(180, 200);
+            double valTBufferMid = rnd.Next(75, 110);
+            double valTBufferCold = rnd.Next(20, 40);
+            double valTheaterOilOut = rnd.Next(250, 290);
+            double valValveFeedHot = RandomFromDoubleArray(onOffArr, 0); // Off=50, On=70
+            double valValveFeedCold = RandomFromDoubleArray(onOffArr, 0); // Off=50, On=70
+            double valValveReturn = RandomFromDoubleArray(onOffArr, 0); // Cold=50, Hot=70
+            double valValveCoolant = rnd.Next(50, 90); // 0-100%, 50-90
+            double valPowerHeating = rnd.Next(5, 12); // 0-14kW ?
 
             var power = new Power()
             {
                 // To milliseconds
                 ElapsedTime = ts.Milliseconds + tsSeconds * 1000,
 
-                State = (int)valState,
+                State = valState, 
 
                 THotTank = valTHotTank,
                 TColdTank = valTCoolTank,
@@ -82,13 +67,16 @@ namespace DataHandler
             return power;
         }
 
-
         static public long RandomFromIntArray(long[] intArr, int period)
         {
-            // long okTo = rnd.Next(0, period);
-            // if (okTo)
             long index = rnd.Next(0, intArr.Length);
             return intArr[index];
+        }
+
+        static public double RandomFromDoubleArray(double[] dblArr, int period)
+        {
+            long index = rnd.Next(0, dblArr.Length);
+            return dblArr[index];
         }
 
         static public bool GetRandomOk(int max)

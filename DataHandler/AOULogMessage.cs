@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DataHandler
 {
  
-    public class AOULogMessage
+    public struct AOULogMessage
     {
         public long time
         {
@@ -27,6 +27,14 @@ namespace DataHandler
         public uint prio
         {
             get; set;
+        }
+
+        public AOULogMessage(uint logTime, string logMsg)
+        {
+            time = logTime;
+            message = logMsg;
+            prio = 0;
+            pid = 0;
         }
 
         public AOULogMessage(uint logTime, string logMsg, uint logPrio, uint logProcessId)

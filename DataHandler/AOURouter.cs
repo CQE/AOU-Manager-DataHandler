@@ -50,7 +50,7 @@ namespace DataHandler
             // System.Diagnostics.
         }
 
-        public AOURouter(RunType mode) : this()
+        public AOURouter(RunType mode, string metaData="") : this()
         {
             runMode = mode;
             if (runMode==RunType.Random)
@@ -59,11 +59,11 @@ namespace DataHandler
             }
             else if (runMode == RunType.File)
             {
-                LoadTestFile(3);
+                LoadTestFile(metaData);
             }
             else if (runMode == RunType.Serial)
             {
-                serialData = new AOUSerialData();
+                serialData = new AOUSerialData(metaData);
             }
         }
 
@@ -82,13 +82,164 @@ namespace DataHandler
 
         }
 
-        public void LoadTestFile(int id)
+        public void LoadTestFile(string fileName)
         { 
-            dataFile.OpenFileIfExistAndGetText("AOUTest", "aou"+id);
-            String s = dataFile.StrData;
-            bool b = dataFile.NewTextLoaded;
+            if (fileName.Length > 0)
+                dataFile.OpenFileIfExistAndGetText(fileName);
         }
 
+        public List<Power> GetFileDataList(out List<AOULogMessage> logList)
+        {
+            long time_ms = 0;
+
+            double hot_tank_temp = double.NaN;
+            double cold_tank_temp = double.NaN;
+            double valve_return_temp = double.NaN;
+            double cool_temp = double.NaN;
+
+            string seqState = "";
+
+            string logMsg = "";
+
+            double valvesRetPrev = double.NaN;
+            double valvesRetNew = double.NaN;
+
+            long min_ms = long.MaxValue;
+            long max_ms = 0;
+
+            AOUInputParser.FeedType feed = AOUInputParser.FeedType.unknown;
+            double feedPrev = 0;
+            double feedNew = 0;
+            List<Power> listData = new List<Power>();
+            logList = new List<AOULogMessage>();
+
+            if (IsFileDataAvailable())
+            {
+                string text = GetFileData();
+                text = text.Replace("\t", "");
+                text = text.Replace("\r", "");
+                text = text.Replace("\n", "");
+
+                string nextTag = "Dummy";
+                while (nextTag.Length > 0)
+                {
+                    Power tempPower = new Power();
+                    int count = 0;
+
+                    nextTag = AOUInputParser.GetNextTag(text);
+                    bool validTag = nextTag.Length > 0;
+
+                    if (nextTag == AOUInputParser.tagTemperature)
+                    {
+                        if (AOUInputParser.ParseTemperature(text, out time_ms, out hot_tank_temp, out cold_tank_temp,
+                                                                  out valve_return_temp, out cool_temp, out count))
+                        {
+                            tempPower.ElapsedTime = time_ms;
+                            tempPower.THotTank = hot_tank_temp;
+                            tempPower.TColdTank = cold_tank_temp;
+                            tempPower.TReturnValve = valve_return_temp;
+                            tempPower.ValveCoolant = cool_temp;
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagSequence)
+                    {
+                        if (AOUInputParser.ParseSequence(text, out time_ms, out seqState, out count))
+                        {
+                            tempPower.ElapsedTime = time_ms;
+                            tempPower.State = AOUTypes.StringToStateType(seqState);
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagFeeds)
+                    {
+                        if (AOUInputParser.ParseFeeds(text, out time_ms, out feed, out feedNew, out feedPrev, out count))
+                        {
+                            tempPower.ElapsedTime = time_ms;
+                            tempPower.TReturnActual = feedPrev;
+                            tempPower.TReturnForecasted = feedNew;
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagValves)
+                    {
+                        if (AOUInputParser.ParseValves(text, out time_ms, out valvesRetPrev, out valvesRetNew, out count))
+                        {
+                            tempPower.ElapsedTime = time_ms;
+                            tempPower.TReturnValve = valvesRetPrev;
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagLog)
+                    {
+                        if (AOUInputParser.ParseLog(text, out time_ms, out logMsg, out count))
+                        {
+                            AOULogMessage msg = new AOULogMessage((uint)time_ms, logMsg);
+                            logList.Add(msg);
+                        }
+                    }
+                    else if (nextTag.Length > 0)
+                    {
+                        string unknownTagText;
+                        AOUInputParser.FindTagAndExtractText(nextTag, text, out unknownTagText, out count);
+                        validTag = false;
+                        // Todo: if not found valid tag
+                    }
+
+                    if (validTag && nextTag != AOUInputParser.tagLog)
+                    {
+                        if (max_ms == 0 || tempPower.ElapsedTime > max_ms)
+                        {
+                            listData.Add(tempPower);
+                        }
+                        else if (tempPower.ElapsedTime < min_ms)
+                        {
+                            listData.Insert(0, tempPower);
+                        }
+                        else {
+                            for (int i = 0; i < listData.Count; i++)
+                            {
+                                if (listData[i].ElapsedTime == tempPower.ElapsedTime)
+                                {
+                                    Power pwr = listData[i];
+                                    if (pwr.TColdTank == double.NaN) pwr.TColdTank = tempPower.TColdTank;
+                                    if (pwr.THotTank == double.NaN) pwr.THotTank = tempPower.THotTank;
+                                    if (pwr.TReturnActual == double.NaN) pwr.TReturnActual = tempPower.TReturnActual;
+                                    if (pwr.TReturnForecasted == double.NaN) pwr.TReturnForecasted = tempPower.TReturnForecasted;
+                                    if (pwr.TReturnValve == double.NaN) pwr.TReturnValve = tempPower.TReturnValve;
+                                    if (pwr.TBufferCold == double.NaN) pwr.TBufferCold = tempPower.TBufferCold;
+                                    if (pwr.TBufferMid == double.NaN) pwr.TBufferMid = tempPower.TBufferMid;
+                                    if (pwr.TBufferHot == double.NaN) pwr.TBufferHot = tempPower.TBufferHot;
+                                    if (pwr.PowerHeating == double.NaN) pwr.PowerHeating = tempPower.PowerHeating;
+                                    if (pwr.THeaterOilOut == double.NaN) pwr.THeaterOilOut = tempPower.THeaterOilOut;
+                                    if (pwr.ValveCoolant == double.NaN) pwr.ValveCoolant = tempPower.ValveCoolant;
+                                    if (pwr.ValveFeedCold == double.NaN) pwr.ValveFeedCold = tempPower.ValveFeedCold;
+                                    if (pwr.ValveFeedHot == double.NaN) pwr.ValveFeedHot = tempPower.ValveFeedHot;
+                                    if (pwr.ValveReturn == double.NaN) pwr.ValveReturn = tempPower.ValveReturn;
+                                    listData[i] = pwr;
+                                    break;
+                                }
+                                else if (tempPower.ElapsedTime < listData[i].ElapsedTime)
+                                {
+                                    listData.Insert(i, tempPower);
+                                    break;
+                                }
+                                else if (i == (listData.Count-1))
+                                {
+                                    bool err = true;
+                                }
+                            }
+                        }
+
+                        if (tempPower.ElapsedTime < min_ms)
+                            min_ms = tempPower.ElapsedTime;
+
+                        if (tempPower.ElapsedTime > max_ms)
+                            max_ms = tempPower.ElapsedTime;
+                    }
+                    text = text.Substring(count);
+                }
+            }
+            return listData;
+        }
+
+        
         public void SaveValuesToFile(Power[] powers)
         {
             string dateStr = DateTime.Today.ToString("yyMMdd");
@@ -100,7 +251,7 @@ namespace DataHandler
                 dataFile.AddToFile("AOU\\TBufferHot\\", "TBufferHot-" + dateStr + ".txt", ts + pwr.TBufferHot);
                 dataFile.AddToFile("AOU\\TCoolTank\\", "TCoolTank-" + dateStr + ".txt", ts + pwr.TColdTank);
                 dataFile.AddToFile("AOU\\THotTank\\", "THotTank-" + dateStr + ".txt", ts + pwr.THotTank);
-                dataFile.AddToFile("AOU\\State\\", "State-" + dateStr + ".txt", ts + pwr.State);
+                dataFile.AddToFile("AOU\\State\\", "State-" + dateStr + ".txt", ts + pwr.State.ToString());
                 dataFile.AddToFile("AOU\\TReturnActual\\", "TReturnActual-" + dateStr + ".txt", ts + pwr.TReturnActual);
                 dataFile.AddToFile("AOU\\TReturnForecasted\\", "TReturnForecasted-" + dateStr + ".txt", ts + pwr.TReturnForecasted);
                 dataFile.AddToFile("AOU\\TReturnValve\\", "TReturnValve-" + dateStr + ".txt", ts + pwr.TReturnValve);
@@ -128,7 +279,11 @@ namespace DataHandler
             }
             else if (runMode == RunType.File)
             {
-                // ToDo: From  file
+               if (IsFileDataAvailable())
+               {
+                   powerValues = GetFileDataList(out logMessages);
+               }
+
             }
             else if (runMode == RunType.Serial)
             {
@@ -156,6 +311,20 @@ namespace DataHandler
         {
             lastPowerValuesCount = powerValues.Count;
             return powerValues[lastPowerValuesCount-1];
+        }
+
+        public int GetNumPowerValues()
+        {
+            return powerValues.Count;
+        }
+
+        public Power GetPowerValuesFromStartTime(long time, int count)
+        {
+            int index = 0;
+            var res = powerValues.Find(item => item.ElapsedTime == time);
+            return res;
+
+            // return powerValues.GetRange(lastPowerValuesCount - count, count).ToArray();
         }
 
         /**************************

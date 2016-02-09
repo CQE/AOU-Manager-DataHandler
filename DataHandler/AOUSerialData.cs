@@ -24,10 +24,12 @@ namespace DataHandler
         private DataWriter dataWriteObject = null;
         private DataReader dataReaderObject = null;
 
+        private string comport = "";
+
         private string textToSend;
         private string receivedText;
 
-        public AOUSerialData()
+        public AOUSerialData(string comport)
         {
             Connected = false;
             InitComPort();
