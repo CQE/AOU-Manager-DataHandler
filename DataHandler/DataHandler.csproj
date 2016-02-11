@@ -109,6 +109,7 @@
   <ItemGroup>
     <Compile Include="AOUCalibrate.cs" />
     <Compile Include="AOULogMessage.cs" />
+    <Compile Include="AOURandomData.cs" />
     <Compile Include="AOURouter.cs" />
     <Compile Include="AOUSettings.cs" />
     <Compile Include="AOUInputParser.cs" />

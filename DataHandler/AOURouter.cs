@@ -9,6 +9,8 @@ namespace DataHandler
 {
     public class AOURouter
     {
+        public const int MaxTotalValuesInMemory = 90;
+
         // "Idle","Heating","Cooling","Fixed Cycling", "Auto with IMM"
         public enum AOUCommandType { idleMode, heatingMode, coolingMode, fixedCyclingMode, autoWidthIMMMode,
                                      tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
@@ -17,16 +19,19 @@ namespace DataHandler
 
         // Different Run types. File and Random are test modes
         public enum RunType {Serial, File, Random};
-        public const int MaxRandomCount = 50;
-
-        AOUSerialData serialData;
-
-        public RunType runMode {
-            get; set;
+        public RunType runMode
+        {
+            get; private set;
         }
 
-        // Object to read and write to text files. Default in User Image folder
+        // Object to read and write text to serial port
+        AOUSerialData serialData;
+
+        // Object to read and write to text files in User Image folder
         private TextFile dataFile;
+
+        // Object to read random text data
+        AOURandomData randomData;
 
         List<AOULogMessage> logMessages;
         List<Power> powerValues;
@@ -34,38 +39,28 @@ namespace DataHandler
         int lastLogMessageCount;
         int lastPowerValuesCount;
 
-        public bool IsFileDataAvailable()
-        {
-            return dataFile.NewTextLoaded;
-        }
-
-        public string GetFileData()
-        {
-            return dataFile.StrData;
-        }
+        private string logstr = "AOURouter. No run mode selected";
 
         public AOURouter()
         {
-            dataFile = new TextFile();
             logMessages = new List<AOULogMessage>();
             powerValues = new List<Power>();
             lastLogMessageCount = 0; // Ready to get from start
             lastPowerValuesCount = 0;
             runMode = RunType.Serial; // Normal
-
-            // System.Diagnostics.
         }
 
-        public AOURouter(RunType mode, string metaData="") : this()
+        public AOURouter(RunType mode, string metaData = "") : this()
         {
             runMode = mode;
-            if (runMode==RunType.Random)
+            if (runMode == RunType.Random)
             {
-                InitRandom(MaxRandomCount);
+                randomData = new AOURandomData(metaData);
             }
             else if (runMode == RunType.File)
             {
-                LoadTestFile(metaData);
+                dataFile = new TextFile();
+                dataFile.OpenFileIfExistAndGetText(metaData);
             }
             else if (runMode == RunType.Serial)
             {
@@ -73,32 +68,76 @@ namespace DataHandler
             }
         }
 
-        public void InitRandom(int count)
+        public string GetLogStr()
         {
-            lastLogMessageCount = 0; // Ready to get
-            for (int i = 0; i < count; i++)
+            if (runMode == RunType.Serial && serialData != null)
             {
-                logMessages.Add(ValueGenerator.GetRandomLogMsg());
+                return serialData.GetLogText();
+            }
+            else if (runMode == RunType.File && dataFile != null)
+            {
+                return dataFile.GetLogText();
+            }
+            else if (runMode == RunType.Random && randomData != null)
+            {
+                return randomData.GetLogText();
+            }
+            else
+            {
+                string text = logstr;
+                logstr = "";
+                return text;
             }
 
-            for (int i = 0; i < count; i++)
-            {
-                powerValues.Add(ValueGenerator.GetRandomPower());
-            }
+        }
 
+        public bool IsDataAvailable()
+        {
+            if (runMode == RunType.Serial && serialData != null)
+            {
+                return serialData.IsDataAvailable();
+            }
+            else if (runMode == RunType.File && dataFile != null)
+            {
+                return dataFile.StrData.Length > 0;
+            }
+            else if (runMode == RunType.Random && randomData != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public string GetTextData()
+        {
+            if (runMode == RunType.Serial && serialData != null)
+            {
+                return serialData.GetTextData();
+            }
+            else if (runMode == RunType.File && dataFile != null)
+            {
+                return dataFile.StrData;
+            }
+            else
+            {
+                return "ToDo";
+            }
         }
 
         public void SendToPlc(string text)
         {
             if (runMode == RunType.Random)
             {
-                // Save to log file
+                // ToDo: Save to log file
             }
             else if (runMode == RunType.File)
             {
-                // Save to log file
+                // ToDo: Save to log file
             }
-            else if (runMode == RunType.Serial)
+            else if (runMode == RunType.Serial && serialData != null)
             {
                 serialData.SendData(text);
             }
@@ -118,21 +157,13 @@ namespace DataHandler
                     SendToPlc(String.Format("<cmd><heatingTime>{0}</heatingTime></cmd>", value)); break;
                 case AOUCommandType.toolHeatingFeedPause:
                     SendToPlc(String.Format("<cmd><toolHeatingFeedPause>{0}</toolHeatingFeedPause></cmd>", value)); break;
-                    /*
-                case AOUCommandType.:
-                    SendToPlc(String.Format("<cmd></cmd>"); break;
-                    */
+                default:
+                    SendToPlc(String.Format("<cmd>{0}</cmd>", cmd)); break;
             }
 
         }
 
-        public void LoadTestFile(string fileName)
-        { 
-            if (fileName.Length > 0)
-                dataFile.OpenFileIfExistAndGetText(fileName);
-        }
-
-        public List<Power> GetFileDataList(out List<AOULogMessage> logList)
+        public List<Power> GetTextDataList(out List<AOULogMessage> logList)
         {
             long time_ms = 0;
 
@@ -157,9 +188,9 @@ namespace DataHandler
             List<Power> listData = new List<Power>();
             logList = new List<AOULogMessage>();
 
-            if (IsFileDataAvailable())
+            if (IsDataAvailable())
             {
-                string text = GetFileData();
+                string text = GetTextData();
                 text = text.Replace("\t", "");
                 text = text.Replace("\r", "");
                 text = text.Replace("\n", "");
@@ -302,36 +333,43 @@ namespace DataHandler
             }
         }
 
-        public void Update(int maxTotal)
+        public void Update()
         {
-            if (runMode == RunType.Random)
+            if (runMode == RunType.Random && randomData != null)
             {
-                if (ValueGenerator.GetRandomOk(50))
-                {
-                    logMessages.Add(ValueGenerator.GetRandomLogMsg());
-                    if (logMessages.Count > maxTotal)
+                if (randomData.NewRandomLogMessageAvailable())
+                { 
+                    logMessages.Add(randomData.GetRandomLogMsg());
+                    if (logMessages.Count > MaxTotalValuesInMemory)
                     {
                         logMessages.RemoveAt(0);
                     }
                 }
 
-                powerValues.Add(ValueGenerator.GetRandomPower());
-                if (powerValues.Count > maxTotal)
+                powerValues.Add(randomData.GetRandomPower());
+                if (powerValues.Count > MaxTotalValuesInMemory)
                 {
                     powerValues.RemoveAt(0);
                 }
             }
-            else if (runMode == RunType.File)
+            else if (runMode == RunType.File && dataFile != null)
             {
-               if (IsFileDataAvailable())
-               {
-                   powerValues = GetFileDataList(out logMessages);
-               }
+                if (IsDataAvailable())
+                {
+                    powerValues = GetTextDataList(out logMessages);
+                }
 
             }
             else if (runMode == RunType.Serial)
             {
-                powerValues.Add(serialData.GetLatestValues());
+                if (IsDataAvailable())
+                { 
+                    var dt = DateTime.Now;
+                    uint time = (uint)(dt.Hour * 60 * 1000 + dt.Minute * 1000 + DateTime.Now.Millisecond);
+                    string msg = serialData.GetTextData();
+                    logMessages.Add(new AOULogMessage(time, msg));
+                    // powerValues.Add(serialData.GetLatestValues());
+                }
             }
 
             // SaveValuesToFile(new Power[] { pwr });
@@ -342,8 +380,19 @@ namespace DataHandler
         ************************/
         public Power[] GetLastPowerValues(int count)
         {
-            lastPowerValuesCount = powerValues.Count;
-            return powerValues.GetRange(lastPowerValuesCount - count, count).ToArray();
+            if (powerValues.Count > 0)
+            {
+                if (count > powerValues.Count)
+                {
+                    count = powerValues.Count;
+                }
+                lastPowerValuesCount = powerValues.Count;
+                return powerValues.GetRange(lastPowerValuesCount - count, count).ToArray();
+            }
+            else
+            {
+                return new Power[0];
+            }
         }
 
         public bool NewPowerDataIsAvailable()
@@ -353,8 +402,15 @@ namespace DataHandler
 
         public Power GetLastPowerValue()
         {
-            lastPowerValuesCount = powerValues.Count;
-            return powerValues[lastPowerValuesCount-1];
+            if (powerValues.Count > 0)
+            {
+                lastPowerValuesCount = powerValues.Count;
+                return powerValues[lastPowerValuesCount - 1];
+            }
+            else
+            {
+                return new Power();
+            }
         }
 
         public int GetNumPowerValues()
@@ -376,8 +432,19 @@ namespace DataHandler
         **************************/
         public AOULogMessage[] GetLastLogMessages(int count)
         {
-            lastLogMessageCount = logMessages.Count;
-            return logMessages.GetRange(lastLogMessageCount - count, count).ToArray();
+            if (logMessages.Count > 0)
+            { 
+                if (count > logMessages.Count)
+                {
+                    count = logMessages.Count;
+                }
+                lastLogMessageCount = logMessages.Count;
+                return logMessages.GetRange(lastLogMessageCount - count, count).ToArray();
+            }
+            else
+            {
+                return new AOULogMessage[0];
+            }
         }
 
         public bool NewLogMessagesAreAvailable()
@@ -387,9 +454,16 @@ namespace DataHandler
 
         public AOULogMessage[] GetNewLogMessages()
         {
-            int lmc = lastLogMessageCount;
-            lastLogMessageCount = logMessages.Count;
-            return logMessages.GetRange(lmc, logMessages.Count - lmc).ToArray();
+            if (logMessages.Count > 0)
+            { 
+                int lmc = lastLogMessageCount;
+                lastLogMessageCount = logMessages.Count;
+                return logMessages.GetRange(lmc, logMessages.Count - lmc).ToArray();
+            }
+            else
+            {
+                return new AOULogMessage[0];
+            }
         }
     }
 }

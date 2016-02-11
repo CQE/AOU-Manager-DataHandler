@@ -25,31 +25,97 @@ namespace DataHandlerTestApp
     {
         AOURouter router;
 
+        private DispatcherTimer dTimer;
+
         public MainPage()
         {
             this.InitializeComponent();
-            router = new AOURouter(AOURouter.RunType.File);
+
+            dTimer = new DispatcherTimer();
+            dTimer.Tick += UpdateTick;
+            dTimer.Interval = new TimeSpan(0, 0, 1);
+            dTimer.Start();
+       }
+
+        void UpdateTick(object sender, object e)
+        {
+            if (router != null)
+            {
+                textBox.Text += router.GetLogStr();
+                router.Update();
+                /*
+                if (router.IsDataAvailable())
+                {
+                    textBox.Text += router.GetTextData() + "\r\n";
+                }
+                */
+            }
         }
 
-        private void AOUSerielTest()
+        private void TestSerialComButton_Click(object sender, RoutedEventArgs e)
         {
-            if (router.IsFileDataAvailable())
+            router = new AOURouter(AOURouter.RunType.Serial, "com3, 9600");
+            loadFileButton.Content = "Send Data";
+        }
+
+        private void TestRandomData_Click(object sender, RoutedEventArgs e)
+        {
+            router = new AOURouter(AOURouter.RunType.Random, "30, 1000");
+
+            AOULogMessage[] msg = router.GetLastLogMessages(10);
+            Power[] pwr = router.GetLastPowerValues(10);
+
+            for (int i = 0; i < 160; i++)
             {
-                this.textBox.Text = router.GetFileData();
+                router.Update();
+            }
+
+            bool bp = router.NewPowerDataIsAvailable();
+            Power p = router.GetLastPowerValue();
+
+            bool bm = router.NewLogMessagesAreAvailable();
+            AOULogMessage[] msgn = router.GetNewLogMessages();
+
+            AOULogMessage[] msg2 = router.GetLastLogMessages(10);
+            Power[] pwr2 = router.GetLastPowerValues(10);
+
+            AOULogMessage[] msg3 = router.GetLastLogMessages(100);
+            Power[] pwr3 = router.GetLastPowerValues(100);
+
+            bool ok = bm == bp;
+        }
+
+        private void LoadFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (router != null)
+            { 
+                if (router.runMode == AOURouter.RunType.Serial)
+                {
+                    // router.SendToPlc(this.fileName.Text);
+                    router.SendCommandToPlc(AOURouter.AOUCommandType.tempColdTankFeedSet, 10);
+                }
+                else if (router.runMode == AOURouter.RunType.File)
+                {
+                    router = new AOURouter(AOURouter.RunType.File, fileName.Text);
+                }
+                else if (router.runMode == AOURouter.RunType.File)
+                {
+                    router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
+                }
             }
             else
             {
-                this.textBox.Text = "File not loaded";
+                router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
             }
         }
 
         private void TestLoadedFileButton_Click(object sender, RoutedEventArgs e)
         {
 
-            if (router.IsFileDataAvailable())
+            if (router.runMode == AOURouter.RunType.File && router.IsDataAvailable())
             {
                 List<AOULogMessage> logList;
-                List<Power> pwrList = router.GetFileDataList(out logList);
+                List<Power> pwrList = router.GetTextDataList(out logList);
                 if (logList.Count > 0)
                 {
                     foreach (var log in logList)
@@ -84,36 +150,5 @@ namespace DataHandlerTestApp
             }
         }
 
-        private void TestRandomData_Click(object sender, RoutedEventArgs e)
-        {
-            AOURouter r = new AOURouter(AOURouter.RunType.Random);
-
-            AOULogMessage[] msg = r.GetLastLogMessages(10);
-            Power[] pwr = r.GetLastPowerValues(10);
-
-            r.Update(40);
-
-            Power p = r.GetLastPowerValue();
-            bool bp = r.NewPowerDataIsAvailable();
-
-            bool bm = r.NewLogMessagesAreAvailable();
-            AOULogMessage[] msgn = r.GetNewLogMessages();
-
-            AOULogMessage[] msg2 = r.GetLastLogMessages(10);
-            Power[] pwr2 = r.GetLastPowerValues(10);
-
-            bool ok = bm == bp;
-        }
-
-        private void LoadFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            router.LoadTestFile(this.fileName.Text);
-        }
-
-        private void TestSerialComButton_Click(object sender, RoutedEventArgs e)
-        {
-            AOUSerialData sdata = new AOUSerialData("com3");
-
-        }
     }
 }

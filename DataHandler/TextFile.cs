@@ -8,36 +8,30 @@ using Windows.Storage.Streams;
 
 namespace DataHandler
 {
-    public static class FileLog
-    {
-        public static void AddLog(string logText)
-        {
-            // Just for having a breakpoint here at the moment
-            string logToDo = logText;
-        }
-    }
-
-    public class FileResult
-    {
-        public bool Succeded { get; set; }
-        public string ErrorMessage { get; set; }
-
-        public FileResult()
-        {
-            Succeded = false;
-            ErrorMessage = "Unknown Error";
-        }
-    }
-
     // Store data from one sensor in one file, named with date, change file every day
     public class TextFile
     {
-
         StorageFolder dataFolder;
+
+        private string logStr = "";
 
         public string StrData { get; private set; }
 
         public bool NewTextLoaded { get; private set; }
+
+        public void AddLog(string logText)
+        {
+            // Just for having a breakpoint here at the moment
+            logStr += logText + "\r\n";
+        }
+
+        public string GetLogText()
+        {
+            string text = logStr;
+            logStr = "";
+
+            return text;
+        }
 
         public TextFile()
         {
@@ -66,7 +60,7 @@ namespace DataHandler
             }
             catch (Exception ex)
             {
-                FileLog.AddLog("AddToFileAsync Error: " + ex.Message);
+                AddLog("AddToFileAsync Error: " + ex.Message);
             }
         }
 
@@ -78,7 +72,7 @@ namespace DataHandler
             }
             catch (Exception ex)
             {
-                FileLog.AddLog("AddToFileAsync Error: " + ex.Message);
+                AddLog("AddToFileAsync Error: " + ex.Message);
             }
         }
 
@@ -94,7 +88,7 @@ namespace DataHandler
             }
             catch (Exception ex)
             {
-                FileLog.AddLog("CreateFileIfNotExistAndAddTextLine Error: " + ex.Message);
+                AddLog("CreateFileIfNotExistAndAddTextLine Error: " + ex.Message);
             }
         }
 
@@ -110,7 +104,7 @@ namespace DataHandler
             }
             catch (Exception ex)
             {
-                FileLog.AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
+                AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
             }
         }
 
@@ -126,27 +120,22 @@ namespace DataHandler
                 StorageFile f = await dataFolder.GetFileAsync(fileName);
                 StrData = await FileIO.ReadTextAsync(f);
                 NewTextLoaded = true;
+                AddLog("Filedata loaded from " + fileName + ", " + StrData.Length + " lines");
             }
             catch (Exception ex)
             {
-                FileLog.AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
+                AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
             }
         }
 
-        public FileResult SaveToFile(string subPath, string fileName, string textContent)
+        public void SaveToFile(string subPath, string fileName, string textContent)
         {
-            FileResult fhRes = new FileResult();
             CreateFileIfNotExistAndReplaceText(subPath, fileName, textContent);
-
-            return fhRes;
         }
 
-        public FileResult AddToFile(string subPath, string fileName, string textLine)
+        public void AddToFile(string subPath, string fileName, string textLine)
         {
-            FileResult fhRes = new FileResult();
             CreateFileIfNotExistAndAddTextLine(subPath, fileName, textLine);
-
-            return fhRes;
         }
 
     }
