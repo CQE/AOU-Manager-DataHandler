@@ -15,7 +15,7 @@ namespace DataHandler
 
         private string logStr = "";
 
-        public string StrData { get; private set; }
+        private string StrData = "";
 
         public bool NewTextLoaded { get; private set; }
 
@@ -23,6 +23,19 @@ namespace DataHandler
         {
             // Just for having a breakpoint here at the moment
             logStr += logText + "\r\n";
+        }
+
+        public bool IsDataAvailable()
+        {
+            return StrData.Length > 0;
+        }
+
+        public string GetTextData()
+        {
+            string text = StrData;
+            StrData = "";
+
+            return text;
         }
 
         public string GetLogText()

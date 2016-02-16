@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 namespace DataHandler
-
 {
 
     public class AOUInputParser
@@ -57,6 +56,15 @@ namespace DataHandler
         public const string tagLog = "log";
         public const string tagLogSubTagMsg = "Msg";
 
+        public static bool ValidPowerTag(string tag)
+        {
+            if (tag == tagTemperature || tag == tagFeeds || tag == tagSequence ||
+                tag == tagValves)
+            {
+                return true;
+            }
+            return false;
+        }
 
         #region Common
         public static string GetNextTag(string textLine)
@@ -112,15 +120,7 @@ namespace DataHandler
         public static bool ParseString(string tagText, string textline, out string text)
         {
             int endpos = 0;
-            if (FindTagAndExtractText(tagText, textline, out text, out endpos))
-            {
-                return true;
-            }
-            else
-            {
-                text = "";
-                return false;
-            }
+            return FindTagAndExtractText(tagText, textline, out text, out endpos);
         }
 
         public static bool ParseWord(string tag, string textline, out UInt16 value)
@@ -139,26 +139,14 @@ namespace DataHandler
         {
             int endpos = 0;
             string tagValue = "";
-            bool b = FindTagAndExtractText(tag, textline, out tagValue, out endpos);
 
-            if (b)
+            if (FindTagAndExtractText(tag, textline, out tagValue, out endpos))
             {
                 tagValue.Replace(',', '.');
-                if (double.TryParse(tagValue, out value))
-                {
-                    return true;
-                }
-                else
-                {
-                    value = 0;
-                    return false;
-                }
+                return double.TryParse(tagValue, out value);
             }
-            else
-            {
-                value = 0;
-                return false;
-            }
+            value = 0;
+            return false;
         }
 
         public static bool ParseLong(string tagText, string textline, out long value)
@@ -318,17 +306,37 @@ namespace DataHandler
         public static bool ParseLongTime(string textline, out long time_ms) // Not to be misunderstood
         {
 
-            if (ParseLong(tagSubTagTime, textline, out time_ms))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return ParseLong(tagSubTagTime, textline, out time_ms);
         }
 
-        public static bool ParseTemperature(string textLine, out AOUTemperatureData tempData, out int endpos)
+        public static List<AOULogMessage> ParseTagLogMessages(string tag, string text)
+        {
+            List<AOULogMessage> logs = new List<AOULogMessage>();
+
+            string tagtext;
+            if (ParseString(tag, text, out tagtext))
+            {
+                Regex r = new Regex("<\\/([a-zA-Z]+)>([^<]+)<");
+                var matches = r.Matches(tagtext, 0);
+                if (matches.Count > 0)
+                {
+                    foreach (var match in matches)
+                    {
+                        string s = match.ToString();
+                        int n = s.IndexOf('>');
+                        string tagBefore = s.Substring(2, n - 2);
+                        string between = s.Substring(n + 1, s.Length - n - 2).Trim();
+                        if (between.Length > 2)
+                        {
+                            logs.Add(new AOULogMessage(1000, between, 10, 0));
+                        }
+                    }
+                }
+            }
+            return logs;
+        }
+
+        public static bool ParseTemperature(string textLine, out AOUTemperatureData tempData, out List<AOULogMessage> logList, out int endpos)
         {
             // textLine = "<temperature><Time>104898416</Time><Hot>122</Hot><Cold>56</Cold><Ret>68</Ret><Cool>40</Cool></temperature>";
             string tempText = "";
@@ -341,27 +349,18 @@ namespace DataHandler
             tempData.retTemp = AOUTypes.UInt16_NaN;
             tempData.coolerTemp = AOUTypes.UInt16_NaN;
 
+            logList = new List<AOULogMessage>();
+
             if (FindTagAndExtractText(tagTemperature, textLine, out tempText, out endpos))
             {
-                if (ParseWordTime(tempText, out tempData.time_min_of_week, out tempData.time_ms_of_min) &&
+                return 
+                    ParseWordTime(tempText, out tempData.time_min_of_week, out tempData.time_ms_of_min) &&
                     ParseWord(tagTempSubTagHot, tempText, out tempData.hotTankTemp) &&
                     ParseWord(tagTempSubTagCold, tempText, out tempData.coldTankTemp) &&
                     ParseWord(tagTempSubTagRet, tempText, out tempData.retTemp) &&
-                    ParseWord(tagTempSubTagCool, tempText, out tempData.coolerTemp)
-                )
-                {
-                    return true;
-                }
-                else
-                { 
-                    return false;
-                }
-
+                    ParseWord(tagTempSubTagCool, tempText, out tempData.coolerTemp);
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         public static bool ParseValves(string textLine, out AOUValvesData valvesData, out int endpos)
@@ -535,21 +534,13 @@ namespace DataHandler
                 {
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         public static bool ParseSequence(string textLine, out AOUSeqData seqData, out int endpos)
         {
             string tempText;
-            string stateStr = "";
 
             seqData.AOUSeqDataHeader = AOUTypes.AOUSeqDataId;
             seqData.time_min_of_week = 0;
@@ -557,25 +548,16 @@ namespace DataHandler
             seqData.state = (UInt16)AOUTypes.StateType.NOTHING;
             seqData.cycle = 0;
 
-
             if (FindTagAndExtractText(tagSequence, textLine, out tempText, out endpos))
             {
                 if (ParseWordTime(tempText, out seqData.time_min_of_week, out seqData.time_ms_of_min) &&
-                    ParseString(tagSeqSubTagState, tempText, out stateStr) &&
+                    ParseWord(tagSeqSubTagState, tempText, out seqData.state) &&
                     ParseWord(tagSeqSubTagCycle, tempText, out seqData.cycle))
                 {
-                    seqData.state = (UInt16)AOUTypes.StringToStateType(stateStr);
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
         #endregion
 

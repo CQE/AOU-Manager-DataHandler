@@ -19,19 +19,22 @@ namespace DataHandler
         }
 
         // Object to read and write text to serial port
-        AOUSerialData serialData;
+        private AOUSerialData serialData;
 
         // Object to read and write to text files in User Image folder
         private TextFile dataFile;
 
         // Object to read random text data
-        AOURandomData randomData;
+        private AOURandomData randomData;
 
-        List<AOULogMessage> logMessages;
-        List<Power> powerValues;
+        // Text to parse from file, serial or random
+        private string textDataStream = "";
 
-        int lastLogMessageCount;
-        int lastPowerValuesCount;
+        private List<AOULogMessage> logMessages;
+        private List<Power> powerValues;
+
+        private int lastLogMessageCount;
+        private int lastPowerValuesCount;
 
         private string logstr = "AOURouter. No run mode selected";
 
@@ -85,7 +88,8 @@ namespace DataHandler
 
         }
 
-        public bool IsDataAvailable()
+        #region PrivateMethods
+        private bool IsDataAvailable()
         {
             if (runMode == RunType.Serial && serialData != null)
             {
@@ -93,7 +97,7 @@ namespace DataHandler
             }
             else if (runMode == RunType.File && dataFile != null)
             {
-                return dataFile.StrData.Length > 0;
+                return dataFile.IsDataAvailable();
             }
             else if (runMode == RunType.Random && randomData != null)
             {
@@ -105,30 +109,36 @@ namespace DataHandler
             }
         }
 
-        public string GetTextData()
+        private int GetTextData()
         {
+            string text = "error";
             if (runMode == RunType.Serial && serialData != null)
             {
-                return serialData.GetTextData();
+                text = serialData.GetTextData();
             }
             else if (runMode == RunType.File && dataFile != null)
             {
-                return dataFile.StrData;
+                text = dataFile.GetTextData();
             }
-            else
-            {
-                return "ToDo";
-            }
-        }
+            text = text.Replace("\t", "");
+            text = text.Replace("\r", "");
+            text = text.Replace("\n", "");
+
+            textDataStream += text;
+
+            return textDataStream.Length;
+       }
 
         public void SendToPlc(string text)
         {
             if (runMode == RunType.Random)
             {
+                logMessages.Add(new AOULogMessage(1000 * 4, "SendToPlc: "+ text));
                 // ToDo: Save to log file
             }
             else if (runMode == RunType.File)
             {
+                logMessages.Add(new AOULogMessage(1000 * 4, "SendToPlc: " + text));
                 // ToDo: Save to log file
             }
             else if (runMode == RunType.Serial && serialData != null)
@@ -157,10 +167,9 @@ namespace DataHandler
 
         }
 
-        public List<Power> GetTextDataList(out List<AOULogMessage> logList)
+        private List<Power> GetTextDataList(out List<AOULogMessage> logList)
         {
             long time_ms = 0;
-            string seqState = "";
             string logMsg = "";
 
             AOUSeqData seqData;
@@ -175,155 +184,165 @@ namespace DataHandler
             long max_ms = 0;
 
             List<Power> listData = new List<Power>();
+
+            List<AOULogMessage> newLogs = new List<AOULogMessage>();
             logList = new List<AOULogMessage>();
 
-            if (IsDataAvailable())
+            int prevTextLength = GetTextData();
+
+            while (prevTextLength > 0)
             {
-                string text = GetTextData();
-                text = text.Replace("\t", "");
-                text = text.Replace("\r", "");
-                text = text.Replace("\n", "");
+                Power tempPower = new Power();
+                int count = 0;
 
-                string nextTag = "Dummy";
-                while (nextTag.Length > 0)
+                string nextTag = AOUInputParser.GetNextTag(textDataStream);
+                if (nextTag.Length > 0)
                 {
-                    Power tempPower = new Power();
-                    int count = 0;
+                    logList.AddRange(AOUInputParser.ParseTagLogMessages(nextTag, textDataStream));
+                }
 
-                    nextTag = AOUInputParser.GetNextTag(text);
-                    bool validTag = nextTag.Length > 0;
+                if (nextTag == AOUInputParser.tagTemperature)
+                {
+                    if (AOUInputParser.ParseTemperature(textDataStream, out tempData, out newLogs, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(tempData.time_min_of_week, tempData.time_ms_of_min);
+                        tempPower.THotTank = tempData.hotTankTemp;
+                        tempPower.TColdTank = tempData.coldTankTemp;
+                        tempPower.TReturnActual = tempData.retTemp;
+                        tempPower.ValveCoolant = tempData.coolerTemp;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagSequence)
+                {
+                    if (AOUInputParser.ParseSequence(textDataStream, out seqData, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(seqData.time_min_of_week, seqData.time_ms_of_min);
+                        tempPower.State = (AOUTypes.StateType)seqData.state;
+                        // tempPower.Cycle = seqData.cycle;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagIMM)
+                {
+                    if (AOUInputParser.ParseIMM(textDataStream, out immData, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(immData.time_min_of_week, immData.time_ms_of_min);
+                        AOUTypes.IMMSettings set = (AOUTypes.IMMSettings)immData.imm_setting_type;
+                        long value = immData.imm_setting_val;
+                        // tempPower.State = Types(immData;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagFeeds)
+                {
+                    if (AOUInputParser.ParseFeeds(textDataStream, out feedData, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(feedData.time_min_of_week, feedData.time_ms_of_min);
+                        tempPower.TReturnActual = feedData.prevFeedTemp;
+                        tempPower.TReturnForecasted = feedData.newFeedTemp;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagLevels)
+                {
+                    if (AOUInputParser.ParseLevels(textDataStream, out levelData, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(levelData.time_min_of_week, levelData.time_ms_of_min);
+                        // tempPower.TReturnActual = levelData.prevLevel;
+                        // tempPower.TReturnForecasted = levelData.newLevel;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagValves)
+                {
+                    if (AOUInputParser.ParseValves(textDataStream, out valvesData, out count))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(valvesData.time_min_of_week, valvesData.time_ms_of_min);
+                        tempPower.TReturnValve = valvesData.prevValveReturnTemp;
+                        tempPower.TReturnActual = valvesData.prevValveReturnTemp;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagLog)
+                {
+                    if (AOUInputParser.ParseLog(textDataStream, out time_ms, out logMsg, out count))
+                    {
+                        AOULogMessage msg = new AOULogMessage((uint)time_ms, logMsg);
+                        logList.Add(msg);
+                    }
+                }
+                else if (nextTag.Length > 0)
+                {
+                    string unknownTagText;
+                    AOUInputParser.FindTagAndExtractText(nextTag, textDataStream, out unknownTagText, out count);
+                    logList.Add(new AOULogMessage(1000, "Unknown tag:"+ nextTag, 10, 0));
+                }
 
-                    if (nextTag == AOUInputParser.tagTemperature)
+                if (AOUInputParser.ValidPowerTag(nextTag))
+                {
+                    if (max_ms == 0 || tempPower.ElapsedTime > max_ms)
                     {
-                        if (AOUInputParser.ParseTemperature(text, out tempData, out count))
-                        {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(tempData.time_min_of_week, tempData.time_ms_of_min);
-                            tempPower.THotTank = tempData.hotTankTemp;
-                            tempPower.TColdTank = tempData.coldTankTemp;
-                            tempPower.TReturnActual = tempData.retTemp;
-                            tempPower.ValveCoolant = tempData.coolerTemp;
-                        }
+                        listData.Add(tempPower);
                     }
-                    else if (nextTag == AOUInputParser.tagSequence)
+                    else if (tempPower.ElapsedTime < min_ms)
                     {
-                        if (AOUInputParser.ParseSequence(text, out seqData, out count))
-                        {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(seqData.time_min_of_week, seqData.time_ms_of_min);
-                            tempPower.State = AOUTypes.StringToStateType(seqState);
-                        }
+                        listData.Insert(0, tempPower);
                     }
-                    else if (nextTag == AOUInputParser.tagIMM)
-                    {
-                        if (AOUInputParser.ParseIMM(text, out immData, out count))
+                    else {
+                        for (int i = 0; i < listData.Count; i++)
                         {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(immData.time_min_of_week, immData.time_ms_of_min);
-                            AOUTypes.IMMSettings set = (AOUTypes.IMMSettings)immData.imm_setting_type;
-                            long value = immData.imm_setting_val;
-                            // tempPower.State = Types(immData;
-                        }
-                    }
-                    else if (nextTag == AOUInputParser.tagFeeds)
-                    {
-                        if (AOUInputParser.ParseFeeds(text, out feedData, out count))
-                        {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(feedData.time_min_of_week, feedData.time_ms_of_min);
-                            tempPower.TReturnActual = feedData.prevFeedTemp;
-                            tempPower.TReturnForecasted = feedData.newFeedTemp;
-                        }
-                    }
-                    else if (nextTag == AOUInputParser.tagLevels)
-                    {
-                        if (AOUInputParser.ParseLevels(text, out levelData, out count))
-                        {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(levelData.time_min_of_week, levelData.time_ms_of_min);
-                           // tempPower.TReturnActual = levelData.prevLevel;
-                           // tempPower.TReturnForecasted = levelData.newLevel;
-                        }
-                    }
-                    else if (nextTag == AOUInputParser.tagValves)
-                    {
-                        if (AOUInputParser.ParseValves(text, out valvesData, out count))
-                        {
-                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(valvesData.time_min_of_week, valvesData.time_ms_of_min);
-                            tempPower.TReturnValve = valvesData.prevValveReturnTemp;
-                            tempPower.TReturnActual = valvesData.prevValveReturnTemp;
-                        }
-                    }
-                    else if (nextTag == AOUInputParser.tagLog)
-                    {
-                        if (AOUInputParser.ParseLog(text, out time_ms, out logMsg, out count))
-                        {
-                            AOULogMessage msg = new AOULogMessage((uint)time_ms, logMsg);
-                            logList.Add(msg);
-                        }
-                    }
-                    else if (nextTag.Length > 0)
-                    {
-                        string unknownTagText;
-                        AOUInputParser.FindTagAndExtractText(nextTag, text, out unknownTagText, out count);
-                        validTag = false;
-                        // Todo: if not found valid tag
-                    }
-
-                    if (validTag && nextTag != AOUInputParser.tagLog)
-                    {
-                        if (max_ms == 0 || tempPower.ElapsedTime > max_ms)
-                        {
-                            listData.Add(tempPower);
-                        }
-                        else if (tempPower.ElapsedTime < min_ms)
-                        {
-                            listData.Insert(0, tempPower);
-                        }
-                        else {
-                            for (int i = 0; i < listData.Count; i++)
+                            if (listData[i].ElapsedTime == tempPower.ElapsedTime)
                             {
-                                if (listData[i].ElapsedTime == tempPower.ElapsedTime)
-                                {
-                                    Power pwr = listData[i];
-                                    if (pwr.TColdTank == double.NaN) pwr.TColdTank = tempPower.TColdTank;
-                                    if (pwr.THotTank == double.NaN) pwr.THotTank = tempPower.THotTank;
-                                    if (pwr.TReturnActual == double.NaN) pwr.TReturnActual = tempPower.TReturnActual;
-                                    if (pwr.TReturnForecasted == double.NaN) pwr.TReturnForecasted = tempPower.TReturnForecasted;
-                                    if (pwr.TReturnValve == double.NaN) pwr.TReturnValve = tempPower.TReturnValve;
-                                    if (pwr.TBufferCold == double.NaN) pwr.TBufferCold = tempPower.TBufferCold;
-                                    if (pwr.TBufferMid == double.NaN) pwr.TBufferMid = tempPower.TBufferMid;
-                                    if (pwr.TBufferHot == double.NaN) pwr.TBufferHot = tempPower.TBufferHot;
-                                    if (pwr.PowerHeating == double.NaN) pwr.PowerHeating = tempPower.PowerHeating;
-                                    if (pwr.THeaterOilOut == double.NaN) pwr.THeaterOilOut = tempPower.THeaterOilOut;
-                                    if (pwr.ValveCoolant == double.NaN) pwr.ValveCoolant = tempPower.ValveCoolant;
-                                    if (pwr.ValveFeedCold == double.NaN) pwr.ValveFeedCold = tempPower.ValveFeedCold;
-                                    if (pwr.ValveFeedHot == double.NaN) pwr.ValveFeedHot = tempPower.ValveFeedHot;
-                                    if (pwr.ValveReturn == double.NaN) pwr.ValveReturn = tempPower.ValveReturn;
-                                    listData[i] = pwr;
-                                    break;
-                                }
-                                else if (tempPower.ElapsedTime < listData[i].ElapsedTime)
-                                {
-                                    listData.Insert(i, tempPower);
-                                    break;
-                                }
-                                else if (i == (listData.Count-1))
-                                {
-                                    bool err = true;
-                                }
+                                Power pwr = listData[i];
+                                if (pwr.State == AOUTypes.StateType.NOTHING) pwr.State = tempPower.State;
+                                if (pwr.TColdTank == double.NaN) pwr.TColdTank = tempPower.TColdTank;
+                                if (pwr.THotTank == double.NaN) pwr.THotTank = tempPower.THotTank;
+                                if (pwr.TReturnActual == double.NaN) pwr.TReturnActual = tempPower.TReturnActual;
+                                if (pwr.TReturnForecasted == double.NaN) pwr.TReturnForecasted = tempPower.TReturnForecasted;
+                                if (pwr.TReturnValve == double.NaN) pwr.TReturnValve = tempPower.TReturnValve;
+                                if (pwr.TBufferCold == double.NaN) pwr.TBufferCold = tempPower.TBufferCold;
+                                if (pwr.TBufferMid == double.NaN) pwr.TBufferMid = tempPower.TBufferMid;
+                                if (pwr.TBufferHot == double.NaN) pwr.TBufferHot = tempPower.TBufferHot;
+                                if (pwr.THeaterOilOut == double.NaN) pwr.THeaterOilOut = tempPower.THeaterOilOut;
+                                if (pwr.THeatExchangerCoolantOut == double.NaN) pwr.THeatExchangerCoolantOut = tempPower.THeatExchangerCoolantOut;
+
+                                if (pwr.PowerHeating == double.NaN) pwr.PowerHeating = tempPower.PowerHeating;
+
+                                if (pwr.ValveCoolant == double.NaN) pwr.ValveCoolant = tempPower.ValveCoolant;
+                                if (pwr.ValveFeedCold == double.NaN) pwr.ValveFeedCold = tempPower.ValveFeedCold;
+                                if (pwr.ValveFeedHot == double.NaN) pwr.ValveFeedHot = tempPower.ValveFeedHot;
+                                if (pwr.ValveReturn == double.NaN) pwr.ValveReturn = tempPower.ValveReturn;
+
+                                listData[i] = pwr;
+                                break;
+                            }
+                            else if (tempPower.ElapsedTime < listData[i].ElapsedTime)
+                            {
+                                listData.Insert(i, tempPower);
+                                break;
+                            }
+                            else if (i == (listData.Count-1))
+                            {
+                                bool err = true;
                             }
                         }
-
-                        if (tempPower.ElapsedTime < min_ms)
-                            min_ms = tempPower.ElapsedTime;
-
-                        if (tempPower.ElapsedTime > max_ms)
-                            max_ms = tempPower.ElapsedTime;
                     }
-                    text = text.Substring(count);
+
+                    if (tempPower.ElapsedTime < min_ms)
+                        min_ms = tempPower.ElapsedTime;
+
+                    if (tempPower.ElapsedTime > max_ms)
+                        max_ms = tempPower.ElapsedTime;
+                }
+                if (count == 0) // No more valid tags. Wait for more data
+                {
+                   break; 
+                }
+                else
+                {
+                    textDataStream = textDataStream.Substring(count); // Delete handled tag
                 }
             }
             return listData;
         }
 
         
-        public void SaveValuesToFile(Power[] powers)
+        private void SaveValuesToFile(Power[] powers)
         {
             string dateStr = DateTime.Today.ToString("yyMMdd");
 
@@ -340,7 +359,9 @@ namespace DataHandler
                 dataFile.AddToFile("AOU\\TReturnValve\\", "TReturnValve-" + dateStr + ".txt", ts + pwr.TReturnValve);
             }
         }
+        #endregion
 
+        #region PublicMethods
         public void Update()
         {
             if (runMode == RunType.Random && randomData != null)
@@ -476,5 +497,6 @@ namespace DataHandler
                 return new AOULogMessage[0];
             }
         }
+        #endregion
     }
 }

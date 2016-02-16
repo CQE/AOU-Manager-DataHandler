@@ -29,7 +29,7 @@ namespace DataHandler
         {
             idleMode, heatingMode, coolingMode, fixedCyclingMode, autoWidthIMMMode,
             tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
-            toolHeatingFeedPause, toolCoolingFeedPause
+            toolHeatingFeedPause, toolCoolingFeedPause, hotDelayTime, coldDelayTime
         }
 
         public enum FeedType { Unknown, Cold, Hot };
@@ -41,14 +41,11 @@ namespace DataHandler
             SQ_WAIT_FOR_EJECT_BEGIN, SQ_WAIT_FOR_EJECT_END, SQ_WAIT_FOR_OPEN_END
         };
 
-
-
         public enum IMMSettings
         {
             Nothing, SetIMMError, SetIMMBlockInject, SetIMMBlockOpen, IMMStop,
             CycleAuto, IMMInjecting, IMMEjecting, IMMToolClosed
         };
-
 
         public const UInt16 AOUTempDataId = 1 * 0x100 + 7;
         public const UInt16 AOUColdFeedDataId = 2 * 0x100 + 5;

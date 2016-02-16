@@ -106,68 +106,37 @@ namespace DataHandlerTestApp
         private void LoadFileButton_Click(object sender, RoutedEventArgs e)
         {
             PickFile();
-
-            /*
-            if (router != null)
-            { 
-                if (router.runMode == AOURouter.RunType.Serial)
-                {
-                    // router.SendToPlc(this.fileName.Text);
-                    router.SendCommandToPlc(AOURouter.AOUCommandType.tempColdTankFeedSet, 10);
-                }
-                else if (router.runMode == AOURouter.RunType.File)
-                {
-                    router = new AOURouter(AOURouter.RunType.File, fileName.Text);
-                }
-                else if (router.runMode == AOURouter.RunType.File)
-                {
-                    router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
-                }
-            }
-            else
-            {
-                router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
-            }
-            */
         }
 
         private void TestLoadedFileButton_Click(object sender, RoutedEventArgs e)
         {
-            if (router != null && router.runMode == AOURouter.RunType.File && router.IsDataAvailable())
+            var logList = router.GetLastLogMessages(30);
+            var pwrList = router.GetLastPowerValues(30);
+            if (logList.Length > 0)
             {
-                List<AOULogMessage> logList;
-                List<Power> pwrList = router.GetTextDataList(out logList);
-                if (logList.Count > 0)
+                foreach (var log in logList)
                 {
-                    foreach (var log in logList)
-                    {
-                        this.textBox.Text += String.Format("Log time:{0}, Log:{1}\r\n", log.time, log.message);
-                    }
+                    this.textBox.Text += String.Format("Log time:{0}, Log:{1}\r\n", log.time, log.message);
                 }
-                else
-                {
-                    this.textBox.Text += "No Log data\r\n";
-                }
-
-                if (pwrList.Count > 0)
-                {
-                    foreach (var power in pwrList)
-                    {
-                        this.textBox.Text += String.Format("Time:{0}, State:{1}", power.ElapsedTime, power.State);
-                        this.textBox.Text += String.Format(", Hot tank temp:{0}, Cold tank temp:{1}, cool temp:{2}", power.THotTank, power.TColdTank, 0);
-                        this.textBox.Text += String.Format(", Return Actual:{0}, Return Forecasted:{1}, Valve return:{2}\r\n", power.TReturnActual, power.TReturnForecasted, power.TReturnValve);
-                        //this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n");
-                    }
-                }
-                else
-                {
-                    this.textBox.Text += "No Power data\r\n";
-                }
-
             }
             else
             {
-                this.textBox.Text = "No Filedata loaded\r\n";
+                this.textBox.Text += "No Log data\r\n";
+            }
+
+            if (pwrList.Length> 0)
+            {
+                foreach (var power in pwrList)
+                {
+                    this.textBox.Text += String.Format("Time:{0}, State:{1}", power.ElapsedTime, power.State);
+                    this.textBox.Text += String.Format(", Hot tank temp:{0}, Cold tank temp:{1}, cool temp:{2}", power.THotTank, power.TColdTank, 0);
+                    this.textBox.Text += String.Format(", Return Actual:{0}, Return Forecasted:{1}, Valve return:{2}\r\n", power.TReturnActual, power.TReturnForecasted, power.TReturnValve);
+                    //this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n");
+                }
+            }
+            else
+            {
+                this.textBox.Text += "No Power data\r\n";
             }
         }
 
