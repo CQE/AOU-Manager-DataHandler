@@ -13,6 +13,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using DataHandler;
+using Windows.Storage.Pickers;
+using Windows.Storage;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -58,7 +60,7 @@ namespace DataHandlerTestApp
             loadFileButton.Content = "Send Data";
         }
 
-        private void TestRandomData_Click(object sender, RoutedEventArgs e)
+        private void TestRandomDataButton_Click(object sender, RoutedEventArgs e)
         {
             router = new AOURouter(AOURouter.RunType.Random, "30, 1000");
 
@@ -85,8 +87,27 @@ namespace DataHandlerTestApp
             bool ok = bm == bp;
         }
 
+        private async void PickFile()
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.ViewMode = PickerViewMode.List;
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary; // Todo: usb, cloud
+            picker.FileTypeFilter.Add(".txt");
+
+            StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                // Save only path relative to User Pictures folder
+                fileName.Text = file.Path.Substring(file.Path.IndexOf("Pictures") + ("Pictures").Length);
+                router = new AOURouter(AOURouter.RunType.File, fileName.Text);
+            }
+        }
+
         private void LoadFileButton_Click(object sender, RoutedEventArgs e)
         {
+            PickFile();
+
+            /*
             if (router != null)
             { 
                 if (router.runMode == AOURouter.RunType.Serial)
@@ -107,12 +128,12 @@ namespace DataHandlerTestApp
             {
                 router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
             }
+            */
         }
 
         private void TestLoadedFileButton_Click(object sender, RoutedEventArgs e)
         {
-
-            if (router.runMode == AOURouter.RunType.File && router.IsDataAvailable())
+            if (router != null && router.runMode == AOURouter.RunType.File && router.IsDataAvailable())
             {
                 List<AOULogMessage> logList;
                 List<Power> pwrList = router.GetTextDataList(out logList);
@@ -148,6 +169,11 @@ namespace DataHandlerTestApp
             {
                 this.textBox.Text = "No Filedata loaded\r\n";
             }
+        }
+
+        private void CreateFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
         }
 
     }

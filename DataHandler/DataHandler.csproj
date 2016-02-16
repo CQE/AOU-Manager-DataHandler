@@ -109,11 +109,13 @@
   <ItemGroup>
     <Compile Include="AOUCalibrate.cs" />
     <Compile Include="AOULogMessage.cs" />
+    <Compile Include="AOUModels.cs" />
     <Compile Include="AOURandomData.cs" />
     <Compile Include="AOURouter.cs" />
     <Compile Include="AOUSettings.cs" />
     <Compile Include="AOUInputParser.cs" />
     <Compile Include="AOUInputStream.cs" />
+    <Compile Include="AOUTypes.cs" />
     <Compile Include="Power.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AOUSerialData.cs" />

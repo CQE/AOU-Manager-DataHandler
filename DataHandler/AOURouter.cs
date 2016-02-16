@@ -11,12 +11,6 @@ namespace DataHandler
     {
         public const int MaxTotalValuesInMemory = 90;
 
-        // "Idle","Heating","Cooling","Fixed Cycling", "Auto with IMM"
-        public enum AOUCommandType { idleMode, heatingMode, coolingMode, fixedCyclingMode, autoWidthIMMMode,
-                                     tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
-                                     toolHeatingFeedPause, toolCoolingFeedPause
-                                   }
-
         // Different Run types. File and Random are test modes
         public enum RunType {Serial, File, Random};
         public RunType runMode
@@ -143,22 +137,22 @@ namespace DataHandler
             }
         }
 
-        public void SendCommandToPlc(AOUCommandType cmd, int value)
+        public void SendCommandToPlc(AOUTypes.CommandType cmd, int value)
         {
             switch (cmd)
             {
-                case AOUCommandType.tempHotTankFeedSet:
+                case AOUTypes.CommandType.tempHotTankFeedSet:
                     SendToPlc(String.Format("<cmd><tempHotTankFeedSet>{0}</tempHotTankFeedSet></cmd>", value)); break;
-                case AOUCommandType.tempColdTankFeedSet:
+                case AOUTypes.CommandType.tempColdTankFeedSet:
                     SendToPlc(String.Format("<cmd><tempColdTankFeedSet>{0}</tempColdTankFeedSet></cmd>", value)); break;
-                case AOUCommandType.coolingTime:
+                case AOUTypes.CommandType.coolingTime:
                     SendToPlc(String.Format("<cmd><coolingTime>{0}</coolingTime></cmd>", value)); break;
-                case AOUCommandType.heatingTime:
+                case AOUTypes.CommandType.heatingTime:
                     SendToPlc(String.Format("<cmd><heatingTime>{0}</heatingTime></cmd>", value)); break;
-                case AOUCommandType.toolHeatingFeedPause:
+                case AOUTypes.CommandType.toolHeatingFeedPause:
                     SendToPlc(String.Format("<cmd><toolHeatingFeedPause>{0}</toolHeatingFeedPause></cmd>", value)); break;
                 default:
-                    SendToPlc(String.Format("<cmd>{0}</cmd>", cmd)); break;
+                    SendToPlc(String.Format("<cmd><{0}>{1}</{0}></cmd>", cmd, value)); break;
             }
 
         }
@@ -166,25 +160,20 @@ namespace DataHandler
         public List<Power> GetTextDataList(out List<AOULogMessage> logList)
         {
             long time_ms = 0;
-
-            double hot_tank_temp = double.NaN;
-            double cold_tank_temp = double.NaN;
-            double valve_return_temp = double.NaN;
-            double cool_temp = double.NaN;
-
             string seqState = "";
-
             string logMsg = "";
 
-            double valvesRetPrev = double.NaN;
-            double valvesRetNew = double.NaN;
+            AOUSeqData seqData;
+            AOUTemperatureData tempData;
+            AOUFeedData feedData;
+            AOULevelData levelData;
+            AOUValvesData valvesData;
+            AOUIMMData immData;
+
 
             long min_ms = long.MaxValue;
             long max_ms = 0;
 
-            AOUInputParser.FeedType feed = AOUInputParser.FeedType.unknown;
-            double feedPrev = 0;
-            double feedNew = 0;
             List<Power> listData = new List<Power>();
             logList = new List<AOULogMessage>();
 
@@ -206,39 +195,58 @@ namespace DataHandler
 
                     if (nextTag == AOUInputParser.tagTemperature)
                     {
-                        if (AOUInputParser.ParseTemperature(text, out time_ms, out hot_tank_temp, out cold_tank_temp,
-                                                                  out valve_return_temp, out cool_temp, out count))
+                        if (AOUInputParser.ParseTemperature(text, out tempData, out count))
                         {
-                            tempPower.ElapsedTime = time_ms;
-                            tempPower.THotTank = hot_tank_temp;
-                            tempPower.TColdTank = cold_tank_temp;
-                            tempPower.TReturnValve = valve_return_temp;
-                            tempPower.ValveCoolant = cool_temp;
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(tempData.time_min_of_week, tempData.time_ms_of_min);
+                            tempPower.THotTank = tempData.hotTankTemp;
+                            tempPower.TColdTank = tempData.coldTankTemp;
+                            tempPower.TReturnActual = tempData.retTemp;
+                            tempPower.ValveCoolant = tempData.coolerTemp;
                         }
                     }
                     else if (nextTag == AOUInputParser.tagSequence)
                     {
-                        if (AOUInputParser.ParseSequence(text, out time_ms, out seqState, out count))
+                        if (AOUInputParser.ParseSequence(text, out seqData, out count))
                         {
-                            tempPower.ElapsedTime = time_ms;
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(seqData.time_min_of_week, seqData.time_ms_of_min);
                             tempPower.State = AOUTypes.StringToStateType(seqState);
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagIMM)
+                    {
+                        if (AOUInputParser.ParseIMM(text, out immData, out count))
+                        {
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(immData.time_min_of_week, immData.time_ms_of_min);
+                            AOUTypes.IMMSettings set = (AOUTypes.IMMSettings)immData.imm_setting_type;
+                            long value = immData.imm_setting_val;
+                            // tempPower.State = Types(immData;
                         }
                     }
                     else if (nextTag == AOUInputParser.tagFeeds)
                     {
-                        if (AOUInputParser.ParseFeeds(text, out time_ms, out feed, out feedNew, out feedPrev, out count))
+                        if (AOUInputParser.ParseFeeds(text, out feedData, out count))
                         {
-                            tempPower.ElapsedTime = time_ms;
-                            tempPower.TReturnActual = feedPrev;
-                            tempPower.TReturnForecasted = feedNew;
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(feedData.time_min_of_week, feedData.time_ms_of_min);
+                            tempPower.TReturnActual = feedData.prevFeedTemp;
+                            tempPower.TReturnForecasted = feedData.newFeedTemp;
+                        }
+                    }
+                    else if (nextTag == AOUInputParser.tagLevels)
+                    {
+                        if (AOUInputParser.ParseLevels(text, out levelData, out count))
+                        {
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(levelData.time_min_of_week, levelData.time_ms_of_min);
+                           // tempPower.TReturnActual = levelData.prevLevel;
+                           // tempPower.TReturnForecasted = levelData.newLevel;
                         }
                     }
                     else if (nextTag == AOUInputParser.tagValves)
                     {
-                        if (AOUInputParser.ParseValves(text, out time_ms, out valvesRetPrev, out valvesRetNew, out count))
+                        if (AOUInputParser.ParseValves(text, out valvesData, out count))
                         {
-                            tempPower.ElapsedTime = time_ms;
-                            tempPower.TReturnValve = valvesRetPrev;
+                            tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(valvesData.time_min_of_week, valvesData.time_ms_of_min);
+                            tempPower.TReturnValve = valvesData.prevValveReturnTemp;
+                            tempPower.TReturnActual = valvesData.prevValveReturnTemp;
                         }
                     }
                     else if (nextTag == AOUInputParser.tagLog)
@@ -363,12 +371,15 @@ namespace DataHandler
             else if (runMode == RunType.Serial)
             {
                 if (IsDataAvailable())
-                { 
+                {
+                    powerValues = GetTextDataList(out logMessages);
+                    /*
                     var dt = DateTime.Now;
                     uint time = (uint)(dt.Hour * 60 * 1000 + dt.Minute * 1000 + DateTime.Now.Millisecond);
                     string msg = serialData.GetTextData();
                     logMessages.Add(new AOULogMessage(time, msg));
                     // powerValues.Add(serialData.GetLatestValues());
+                    */
                 }
             }
 

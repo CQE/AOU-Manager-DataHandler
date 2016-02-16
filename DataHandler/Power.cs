@@ -16,7 +16,7 @@ namespace DataHandler
          TBufferHot, TBufferMid, TBufferCold
 
          New:
-             HeatExchangerCoolantOut, THeaterOilOut
+             TheatExchangerCoolantOut, TheaterOilOut
 
              ValveFeedHot (on/off) / preferably curve vertically draggable in graph
              ValveFeedCold (on/off) / preferably curve vertically draggable in graph
@@ -42,33 +42,6 @@ namespace DataHandler
              TBufferCold
      */
 
-    public class AOUTypes
-    {
-        public enum StateType { NOTHING = 0, SQ_WAIT_COLD_AT_MOULD_ENTRY, SQ_WAIT_FOR_INJECTION_BEGIN,
-                                SQ_WAIT_FOR_INJECTION_END, SQ_WAIT_FOR_COOLING_END, SQ_WAIT_FOR_OPEN_BEGIN,
-                                SQ_WAIT_FOR_EJECT_BEGIN, SQ_WAIT_FOR_EJECT_END, SQ_WAIT_FOR_OPEN_END
-                              };
-
-        public const int NumStates = 8;
-
-        public static StateType StringToStateType(string state_str)
-        {
-            switch (state_str)
-            {
-                case "SQ_WAIT_COLD_AT_MOULD_ENTRY": return StateType.SQ_WAIT_COLD_AT_MOULD_ENTRY;
-                case "SQ_WAIT_FOR_INJECTION_BEGIN": return StateType.SQ_WAIT_FOR_INJECTION_BEGIN;
-                case "SQ_WAIT_FOR_INJECTION_END": return StateType.SQ_WAIT_FOR_INJECTION_END;
-                case "SQ_WAIT_FOR_COOLING_END": return StateType.SQ_WAIT_FOR_COOLING_END;
-                case "SQ_WAIT_FOR_OPEN_BEGIN": return StateType.SQ_WAIT_FOR_OPEN_BEGIN;
-                case "SQ_WAIT_FOR_EJECT_BEGIN": return StateType.SQ_WAIT_FOR_EJECT_BEGIN;
-                case "SQ_WAIT_FOR_EJECT_END": return StateType.SQ_WAIT_FOR_EJECT_END;
-                case "SQ_WAIT_FOR_OPEN_END": return StateType.SQ_WAIT_FOR_OPEN_END;
-                default: return StateType.NOTHING;
-            }
-        }
-
-    }
-
     public struct Power
     {
         public Power(long etime = 0)
@@ -87,6 +60,7 @@ namespace DataHandler
             TBufferMid = double.NaN;
             TBufferCold = double.NaN;
 
+            THeatExchangerCoolantOut = double.NaN;
             THeaterOilOut = double.NaN;
 
             ValveFeedHot = double.NaN;
@@ -105,31 +79,25 @@ namespace DataHandler
         public AOUTypes.StateType State { get; set; }
 
         public double THotTank { get; set; }
-
         public double TColdTank { get; set; }
 
         public double TReturnValve { get; set; }
 
         public double TReturnActual { get; set; }
-
         public double TReturnForecasted { get; set; }
 
         public double TBufferHot { get; set; }
-
         public double TBufferMid { get; set; }
-
         public double TBufferCold { get; set; }
 
+        public double THeatExchangerCoolantOut { get; set; }
         public double THeaterOilOut { get; set; }
 
-        public double ValveFeedHot { get; set; }
+        public double ValveFeedHot { get; set; } // on/off
+        public double ValveFeedCold { get; set; } // on/off
+        public double ValveReturn { get; set; } // on/off
+        public double ValveCoolant { get; set; } // on/off
 
-        public double ValveFeedCold { get; set; }
-
-        public double ValveReturn { get; set; }
-
-        public double ValveCoolant { get; set; }
-
-        public double PowerHeating { get; set; }
+        public double PowerHeating { get; set; } // on/off
     }
 }

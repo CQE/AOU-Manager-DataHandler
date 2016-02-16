@@ -117,6 +117,7 @@ namespace DataHandler
         {
             try
             {
+                if (fileName[0] == '\\') fileName = fileName.Substring(1);
                 StorageFile f = await dataFolder.GetFileAsync(fileName);
                 StrData = await FileIO.ReadTextAsync(f);
                 NewTextLoaded = true;
@@ -124,7 +125,7 @@ namespace DataHandler
             }
             catch (Exception ex)
             {
-                AddLog("CreateFileIfNotExistAndReplaceText Error: " + ex.Message);
+                AddLog("OpenFileIfExistAndGetText Error: " + ex.Message);
             }
         }
 

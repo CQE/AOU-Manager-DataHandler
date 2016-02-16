@@ -11,61 +11,8 @@ namespace DataHandler
         static Random rnd = new Random();
         static long ts_start = -1;
 
-        static public Power GetRandomPower()
-        {
-            double[] onOffArr = new double[] { 50, 70 };
-
-            if (ts_start == -1)
-                ts_start = DateTime.Now.Ticks;
-
-            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start);
-            int tsSeconds = ts.Hours * 60 * 60 + ts.Minutes * 60 + ts.Seconds;
-            // Todo tsDay - or add day
-
-            AOUTypes.StateType valState = (AOUTypes.StateType)rnd.Next(1, AOUTypes.NumStates + 1);
-
-            double valTHotTank = rnd.Next(204, 235);
-            double valTCoolTank = rnd.Next(31, 45);
-            double valTReturnValve = rnd.Next(40, 87);
-            double valTReturnActual = rnd.Next(40, 46);
-            double valTReturnForecasted = rnd.Next(40, 77);
-            double valTBufferHot = rnd.Next(180, 200);
-            double valTBufferMid = rnd.Next(75, 110);
-            double valTBufferCold = rnd.Next(20, 40);
-            double valTheaterOilOut = rnd.Next(250, 290);
-            double valValveFeedHot = RandomFromDoubleArray(onOffArr, 0); // Off=50, On=70
-            double valValveFeedCold = RandomFromDoubleArray(onOffArr, 0); // Off=50, On=70
-            double valValveReturn = RandomFromDoubleArray(onOffArr, 0); // Cold=50, Hot=70
-            double valValveCoolant = rnd.Next(50, 90); // 0-100%, 50-90
-            double valPowerHeating = rnd.Next(5, 12); // 0-14kW ?
-
-            var power = new Power()
-            {
-                // To milliseconds
-                ElapsedTime = ts.Milliseconds + tsSeconds * 1000,
-
-                State = valState, 
-
-                THotTank = valTHotTank,
-                TColdTank = valTCoolTank,
-                TReturnValve = valTReturnValve,
-                TReturnActual = valTReturnActual,
-                TReturnForecasted = valTReturnForecasted,
-                TBufferHot = valTBufferHot,
-                TBufferMid = valTBufferMid,
-                TBufferCold = valTBufferCold,
-                THeaterOilOut = valTheaterOilOut,
-
-                ValveFeedHot = valValveFeedHot,
-                ValveFeedCold = valValveFeedCold,
-                ValveReturn = valValveReturn,
-                ValveCoolant = valValveCoolant,
-                PowerHeating = valPowerHeating,
-
-            };
-
-            return power;
-        }
+        #region common
+        private static double[] onOffArr = new double[] { 50, 70 };
 
         static public long RandomFromIntArray(long[] intArr, int period)
         {
@@ -90,20 +37,254 @@ namespace DataHandler
             return (char)(byte)rnd.Next((int)lowestChar, (int)highestChar);
         }
 
+        static public string GetRandomString(int length)
+        {
+            string str = "";
+            for (int i = 0; i < length; i++)
+            {
+
+                str += ValueGenerator.GetRandomAsciiChar('A', 'Z');
+            }
+            return str;
+        }
+
+
+        static public double GetRandomDouble(double min, double max, double numDec)
+        {
+            // ToDo numDec
+            return min + (max - min) * rnd.NextDouble();
+        }
+
+        static public UInt16 RealToWordX100(double value)
+        {
+            //return (UInt16)(Math.Round(value, 2)*100);
+            return (UInt16)(Math.Round(value));
+        }
+
+        static public double WordX100ToDouble(UInt16 value)
+        {
+            // return value / 100;
+            return value;
+        }
+
+        #endregion
+
+        static public AOUTemperatureData GetRandomTempData(long time)
+        {
+            AOUTemperatureData tempData; // = new AOUModels.AOUTemperatureData();
+
+            tempData.AOUTempDataHeader = AOUTypes.AOUTempDataId;
+
+            AOUTypes.TimeMsToAOUModelTime(time, out tempData.time_min_of_week, out tempData.time_ms_of_min);
+
+            tempData.coldTankTemp = RealToWordX100(ValueGenerator.GetTColdTankValue());
+            tempData.hotTankTemp = RealToWordX100(ValueGenerator.GetTHotTankValue());
+            tempData.retTemp = RealToWordX100(ValueGenerator.GetTReturnValveValue());
+            tempData.coolerTemp = RealToWordX100(ValueGenerator.GetValveCoolantValue());
+
+            return tempData;
+        }
+
+        static public AOUFeedData GetRandomFeedData(long time, AOUTypes.FeedType feedType)
+        {
+            AOUFeedData feedData; // = new AOUModels.AOUTemperatureData();
+
+            AOUTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
+
+            if (feedType == AOUTypes.FeedType.Cold)
+            {
+                feedData.AOUFeedDataHeader = AOUTypes.AOUColdLevelDataId;
+                feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+                feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+            }
+            else
+            {
+                feedData.AOUFeedDataHeader = AOUTypes.AOUHotLevelDataId;
+                feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+                feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+            }
+
+            return feedData;
+        }
+
+        static public AOULevelData GetRandomLevelData(long time, AOUTypes.FeedType feedType)
+        {
+            AOULevelData levelData; // = new AOUModels.AOUTemperatureData();
+
+            AOUTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
+
+            if (feedType == AOUTypes.FeedType.Cold)
+            {
+                levelData.AOULevelDataHeader = AOUTypes.AOUColdLevelDataId;
+                levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+                levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+            }
+            else
+            {
+                levelData.AOULevelDataHeader = AOUTypes.AOUHotLevelDataId;
+                levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+                levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+            }
+
+            return levelData;
+        }
+
+        static public AOUValvesData GetRandomValvesData(long time)
+        {
+            AOUValvesData valvesData; // = new AOUModels.AOUTemperatureData();
+            valvesData.AOUValvesDataHeader = AOUTypes.AOUValvesDataId;
+
+            AOUTypes.TimeMsToAOUModelTime(time, out valvesData.time_min_of_week, out valvesData.time_ms_of_min);
+
+            valvesData.newValveReturnTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+            valvesData.prevValveReturnTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+
+            return valvesData;
+        }
+
+        static public AOUSeqData GetRandomSeqData(long time, AOUTypes.StateType state)
+        {
+            AOUSeqData seqData;
+            seqData.AOUSeqDataHeader = AOUTypes.AOUSeqDataId;
+
+            AOUTypes.TimeMsToAOUModelTime(time, out seqData.time_min_of_week, out seqData.time_ms_of_min);
+
+            seqData.state = (UInt16)state;
+            seqData.cycle = 0;
+
+            return seqData;
+        }
+
+        static public AOUIMMData GetRandomIMMData(long time, AOUTypes.IMMSettings setting)
+        {
+            AOUIMMData immData;
+            immData.AOUIMMDataHeader = AOUTypes.AOUIMMDataId;
+
+            AOUTypes.TimeMsToAOUModelTime(time, out immData.time_min_of_week, out immData.time_ms_of_min);
+
+            immData.imm_setting_type = (UInt16)setting;
+            immData.imm_setting_val = 0;
+
+            return immData;
+        }
+
+        static public double GetTHotTankValue()
+        {
+            return ValueGenerator.GetRandomDouble(204, 235, 2);
+        }
+
+        static public double GetTColdTankValue()
+        {
+            return ValueGenerator.GetRandomDouble(31, 45, 2);
+        }
+
+        static public double GetTReturnValveValue()
+        {
+            return ValueGenerator.GetRandomDouble(40, 87, 2);
+        }
+
+        static public double GetTReturnActualValue()
+        {
+            return ValueGenerator.GetRandomDouble(40, 46, 2);
+        }
+
+        static public double GetTReturnForecastedValue()
+        {
+            return ValueGenerator.GetRandomDouble(40, 77, 2);
+        }
+
+        static public double GetTBufferHotValue()
+        {
+            return ValueGenerator.GetRandomDouble(180, 200, 2);
+        }
+
+        static public double GetTBufferMidValue()
+        {
+            return ValueGenerator.GetRandomDouble(75, 110, 2);
+        }
+
+        static public double GetTBufferColdValue()
+        {
+            return ValueGenerator.GetRandomDouble(20, 40, 2);
+        }
+
+        static public double GetTheaterOilOutValue()
+        {
+            return ValueGenerator.GetRandomDouble(250, 290, 2);
+        }
+
+        static public double GetValveFeedHotValue()
+        {
+            return RandomFromDoubleArray(onOffArr, 0);  // Off=50, On=70  
+        }
+
+        static public double GetValveFeedColdValue()
+        {
+            return RandomFromDoubleArray(onOffArr, 0); 
+        }
+
+        static public double GetValveReturnValue()
+        {
+            return RandomFromDoubleArray(onOffArr, 0); // Cold=50, Hot=70  
+        }
+
+        static public double GetValveCoolantValue()
+        {
+            return rnd.Next(50, 90); // 0-100%, 50-90  
+        }
+
+        static public double GetPowerHeatingValue()
+        {
+            return rnd.Next(5, 12); // 0-14kW ?
+        }
+
+        /***********************************/
+        static public Power GetRandomPower()
+        {
+
+            if (ts_start == -1)
+                ts_start = DateTime.Now.Ticks;
+
+            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start);
+            int tsSeconds = ts.Hours * 60 * 60 + ts.Minutes * 60 + ts.Seconds;
+            // Todo tsDay - or add day
+
+            AOUTypes.StateType valState = (AOUTypes.StateType)rnd.Next(1, AOUTypes.NumStates + 1);
+
+            var power = new Power()
+            {
+                // To milliseconds
+                ElapsedTime = ts.Milliseconds + tsSeconds * 1000,
+
+                State = valState, 
+
+                THotTank = GetTHotTankValue(),
+                TColdTank = GetTColdTankValue(),
+                TReturnValve = GetTReturnValveValue(),
+                TReturnActual = GetTReturnActualValue(),
+                TReturnForecasted = GetTReturnForecastedValue(),
+                TBufferHot = GetTBufferHotValue(),
+                TBufferMid = GetTBufferMidValue(),
+                TBufferCold = GetTBufferColdValue(),
+                THeaterOilOut = GetTheaterOilOutValue(),
+
+                ValveFeedHot = GetValveFeedHotValue(),
+                ValveFeedCold = GetValveFeedColdValue(),
+                ValveReturn = GetValveReturnValue(),
+                ValveCoolant = GetValveCoolantValue(),
+                PowerHeating = GetPowerHeatingValue(),
+            };
+
+            return power;
+        }
+
         static public AOULogMessage GetRandomLogMsg()
         {
             uint ts = (uint)((ulong)DateTime.Now.Ticks / (ulong)10000); // 100 ns to s
             uint prio = (uint)rnd.Next(1, 3);
             uint pid = (uint)rnd.Next(1038, 1965);
-            string logtext = "log-";
-            for (int i = 0; i < 8; i++)
-            {
-                
-                logtext += ValueGenerator.GetRandomAsciiChar('0', 'Z');
-            }
-
+            string logtext = "log-" + GetRandomString(10);
             return new AOULogMessage(ts, logtext, prio, pid);
         }
-
     }
 }
