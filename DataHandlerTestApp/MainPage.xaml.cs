@@ -77,7 +77,7 @@ namespace DataHandlerTestApp
 
         private void InitSerialCom()
         {
-            string comsettings = "COM4, 9600";
+            string comsettings = "COM3, 9600";
             if (this.fileName.Text.ToLower().StartsWith("com"))
             {
                 comsettings = this.fileName.Text;
@@ -86,10 +86,8 @@ namespace DataHandlerTestApp
             {
                 this.fileName.Text = comsettings;
             }
-
-            router = new AOURouter(AOURouter.RunType.Serial, comsettings);
-            pickFileButton.Visibility = Visibility.Collapsed;
-            // pickFileButton.Content = "Send Data";
+            pickFileButton.Visibility = Visibility.Visible;
+            pickFileButton.Content = "Start";
         }
 
         private void TestLogAndPowerLists()
@@ -108,7 +106,7 @@ namespace DataHandlerTestApp
                 this.textBox.Text += "No Log data\r\n";
             }
 
-            if (pwrList.Length > 0)
+            if (pwrList.Count > 0)
             {
                 foreach (var power in pwrList)
                 {
@@ -136,6 +134,30 @@ namespace DataHandlerTestApp
         }
 
 
+        private void StopSerialData()
+        {
+//            router.s;
+            pickFileButton.Content = "Start";
+        }
+
+        private void StartSerialData()
+        {
+            router = new AOURouter(AOURouter.RunType.Serial, fileName.Text);
+            pickFileButton.Content = "Stop";
+        }
+
+        private void StopRandomData()
+        {
+//            router.s;
+            pickFileButton.Content = "Start";
+        }
+
+        private void StartRandomData()
+        {
+            router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
+            pickFileButton.Content = "Stop";
+        }
+
         private void InitRandomData()
         {
             string randomSettings = String.Format("{0}, {1}", numRandom, msBetween);
@@ -147,9 +169,8 @@ namespace DataHandlerTestApp
             {
                 this.fileName.Text = randomSettings;
             }
-            pickFileButton.Visibility = Visibility.Collapsed;
-
-            router = new AOURouter(AOURouter.RunType.Random, randomSettings);
+            pickFileButton.Visibility = Visibility.Visible;
+            pickFileButton.Content = "Start";
         }
 
         private async void PickFile()
@@ -171,7 +192,16 @@ namespace DataHandlerTestApp
 
         private void PickFileButton_Click(object sender, RoutedEventArgs e)
         {
-            PickFile();
+            if (comboBox.SelectedIndex == 0)
+                PickFile();
+            else if (comboBox.SelectedIndex == 1 && pickFileButton.Content == "Start")
+                StartSerialData();
+            else if (comboBox.SelectedIndex == 1)
+                StopSerialData();
+            else if (comboBox.SelectedIndex == 2 && pickFileButton.Content == "Start")
+                StartRandomData();
+            else if (comboBox.SelectedIndex == 2)
+                StopRandomData();
         }
 
         private string GetNewRandomText()

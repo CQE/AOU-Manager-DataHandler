@@ -5,10 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace DataHandler
+namespace DataHandler 
 {
     public class AOURouter
     {
+        static long testTime = 1000;
+        const long curTimeSpan = 1000; // 1 sek between 
+
+        long minTime = long.MaxValue;
+        long maxTime = 0;
+
         public const int MaxTotalValuesInMemory = 90;
 
         // Different Run types. File and Random are test modes
@@ -173,6 +179,12 @@ namespace DataHandler
                 default:
                     SendToPlc(String.Format("<cmd><{0}>{1}</{0}></cmd>", cmd, value)); break;
             }
+            // <cmd><tempHotTankFeedSet>200</tempHotTankFeedSet></cmd>
+        }
+
+        private long ToCurTimeStep(long value)
+        {
+            return (long)Math.Round(value*1.0 / curTimeSpan) * 1000;
 
         }
 
@@ -188,9 +200,6 @@ namespace DataHandler
             AOUValvesData valvesData;
             AOUIMMData immData;
 
-            long min_ms = long.MaxValue;
-            long max_ms = 0;
-
             List<Power> listData = new List<Power>();
 
             List<AOULogMessage> newLogs = new List<AOULogMessage>();
@@ -200,10 +209,21 @@ namespace DataHandler
 
             while (prevTextLength > 0)
             {
-                Power tempPower = new Power();
+                Power tempPower = new Power(0);
                 int count = 0;
 
-                string nextTag = AOUInputParser.GetNextTag(textDataStream);
+                if (textDataStream.ToLower().IndexOf("invalid tag") != -1)
+                {
+                    string log = textDataStream;
+                }
+
+                string loglines = "";
+                string nextTag = AOUInputParser.GetNextTag(textDataStream, out loglines);
+                if (loglines.Trim().Length > 0)
+                {
+                    logList.Add(new AOULogMessage(GetNowToMs(), loglines, 9, 0));
+                }
+
                 if (nextTag.Length > 0)
                 {
                     logList.AddRange(AOUInputParser.ParseBetweenTagsMessages(nextTag, textDataStream));
@@ -270,7 +290,7 @@ namespace DataHandler
                 {
                     if (AOUInputParser.ParseLog(textDataStream, out time_ms, out logMsg, out count))
                     {
-                        AOULogMessage msg = new AOULogMessage((uint)time_ms, logMsg);
+                        AOULogMessage msg = new AOULogMessage(ToCurTimeStep(time_ms), logMsg);
                         logList.Add(msg);
                     }
                 }
@@ -278,16 +298,20 @@ namespace DataHandler
                 {
                     string unknownTagText;
                     AOUInputParser.FindTagAndExtractText(nextTag, textDataStream, out unknownTagText, out count);
-                    logList.Add(new AOULogMessage(1000, "Unknown tag:"+ nextTag, 10, 0));
+                    logList.Add(new AOULogMessage(GetNowToMs(), "Unknown tag:"+ nextTag, 11, 0));
                 }
 
-                if (AOUInputParser.ValidPowerTag(nextTag))
+                if (AOUInputParser.ValidPowerTag(nextTag) && ToCurTimeStep(tempPower.ElapsedTime) > 0)
                 {
-                    if (max_ms == 0 || tempPower.ElapsedTime > max_ms)
+                    // tempPower.ElapsedTime = testTime;
+                    // testTime += 1000;
+                    long time = ToCurTimeStep(tempPower.ElapsedTime);
+                    tempPower.ElapsedTime = time;
+                    if (maxTime == 0 || time > maxTime)
                     {
                         listData.Add(tempPower);
-                    }
-                    else if (tempPower.ElapsedTime < min_ms)
+                    }                
+                    else if (tempPower.ElapsedTime < minTime)
                     {
                         listData.Insert(0, tempPower);
                     }
@@ -298,16 +322,16 @@ namespace DataHandler
                             {
                                 Power pwr = listData[i];
                                 if (pwr.State == AOUTypes.StateType.NOTHING) pwr.State = tempPower.State;
-                                if (pwr.TColdTank == double.NaN) pwr.TColdTank = tempPower.TColdTank;
-                                if (pwr.THotTank == double.NaN) pwr.THotTank = tempPower.THotTank;
-                                if (pwr.TReturnActual == double.NaN) pwr.TReturnActual = tempPower.TReturnActual;
-                                if (pwr.TReturnForecasted == double.NaN) pwr.TReturnForecasted = tempPower.TReturnForecasted;
-                                if (pwr.TReturnValve == double.NaN) pwr.TReturnValve = tempPower.TReturnValve;
-                                if (pwr.TBufferCold == double.NaN) pwr.TBufferCold = tempPower.TBufferCold;
-                                if (pwr.TBufferMid == double.NaN) pwr.TBufferMid = tempPower.TBufferMid;
-                                if (pwr.TBufferHot == double.NaN) pwr.TBufferHot = tempPower.TBufferHot;
-                                if (pwr.THeaterOilOut == double.NaN) pwr.THeaterOilOut = tempPower.THeaterOilOut;
-                                if (pwr.THeatExchangerCoolantOut == double.NaN) pwr.THeatExchangerCoolantOut = tempPower.THeatExchangerCoolantOut;
+                                if (double.IsNaN(pwr.TColdTank)) pwr.TColdTank = tempPower.TColdTank;
+                                if (double.IsNaN(pwr.THotTank)) pwr.THotTank = tempPower.THotTank;
+                                if (double.IsNaN(pwr.TReturnActual)) pwr.TReturnActual = tempPower.TReturnActual;
+                                if (double.IsNaN(pwr.TReturnForecasted)) pwr.TReturnForecasted = tempPower.TReturnForecasted;
+                                if (double.IsNaN(pwr.TReturnValve)) pwr.TReturnValve = tempPower.TReturnValve;
+                                if (double.IsNaN(pwr.TBufferCold)) pwr.TBufferCold = tempPower.TBufferCold;
+                                if (double.IsNaN(pwr.TBufferMid)) pwr.TBufferMid = tempPower.TBufferMid;
+                                if (double.IsNaN(pwr.TBufferHot)) pwr.TBufferHot = tempPower.TBufferHot;
+                                if (double.IsNaN(pwr.THeaterOilOut)) pwr.THeaterOilOut = tempPower.THeaterOilOut;
+                                if (double.IsNaN(pwr.THeatExchangerCoolantOut)) pwr.THeatExchangerCoolantOut = tempPower.THeatExchangerCoolantOut;
 
                                 if (pwr.PowerHeating == double.NaN) pwr.PowerHeating = tempPower.PowerHeating;
 
@@ -330,12 +354,12 @@ namespace DataHandler
                             }
                         }
                     }
+                    
+                    if (tempPower.ElapsedTime < minTime)
+                        minTime = tempPower.ElapsedTime;
 
-                    if (tempPower.ElapsedTime < min_ms)
-                        min_ms = tempPower.ElapsedTime;
-
-                    if (tempPower.ElapsedTime > max_ms)
-                        max_ms = tempPower.ElapsedTime;
+                    if (tempPower.ElapsedTime > maxTime)
+                        maxTime = tempPower.ElapsedTime;
                 }
                 if (count == 0) // No more valid tags. Wait for more data
                 {
@@ -380,51 +404,43 @@ namespace DataHandler
                 if (randomData.NewRandomLogMessageAvailable())
                 { 
                     logMessages.Add(randomData.GetRandomLogMsg());
-                    if (logMessages.Count > MaxTotalValuesInMemory)
-                    {
-                        logMessages.RemoveAt(0);
-                    }
                 }
-
                 powerValues.Add(randomData.GetRandomPower());
-                if (powerValues.Count > MaxTotalValuesInMemory)
-                {
-                    powerValues.RemoveAt(0);
-                }
             }
             else if (runMode == RunType.File && dataFile != null)
             {
                 if (IsDataAvailable())
                 {
-                    powerValues = GetTextDataList(out logMessages);
+                    newPowerValues = GetTextDataList(out newLogMessages);
+                    powerValues.AddRange(newPowerValues);
+                    logMessages.AddRange(newLogMessages);
                 }
-
             }
             else if (runMode == RunType.Serial)
             {
                 if (IsDataAvailable())
                 {
                     newPowerValues = GetTextDataList(out newLogMessages);
-
                     powerValues.AddRange(newPowerValues);
                     logMessages.AddRange(newLogMessages);
-                    /*
-                    var dt = DateTime.Now;
-                    uint time = (uint)(dt.Hour * 60 * 1000 + dt.Minute * 1000 + DateTime.Now.Millisecond);
-                    string msg = serialData.GetTextData();
-                    logMessages.Add(new AOULogMessage(time, msg));
-                    // powerValues.Add(serialData.GetLatestValues());
-                    */
                 }
             }
 
-            // SaveValuesToFile(new Power[] { pwr });
+            if (powerValues.Count > MaxTotalValuesInMemory)
+            {
+                powerValues.RemoveRange(0, powerValues.Count - MaxTotalValuesInMemory);
+            }
+
+            if (logMessages.Count > MaxTotalValuesInMemory)
+            {
+                logMessages.RemoveRange(0, logMessages.Count - MaxTotalValuesInMemory);
+            }
         }
 
         /************************
             Value Handling
         ************************/
-        public Power[] GetLastPowerValues(int count)
+        public List<Power> GetLastPowerValues(int count)
         {
             if (powerValues.Count > 0)
             {
@@ -433,11 +449,11 @@ namespace DataHandler
                     count = powerValues.Count;
                 }
                 lastPowerValuesCount = powerValues.Count;
-                return powerValues.GetRange(lastPowerValuesCount - count, count).ToArray();
+                return powerValues.GetRange(lastPowerValuesCount - count, count);
             }
             else
             {
-                return new Power[0];
+                return new List<Power>();
             }
         }
 

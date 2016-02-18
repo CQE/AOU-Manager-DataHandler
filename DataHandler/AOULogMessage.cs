@@ -29,7 +29,7 @@ namespace DataHandler
             get; set;
         }
 
-        public AOULogMessage(uint logTime, string logMsg)
+        public AOULogMessage(long logTime, string logMsg)
         {
             time = logTime;
             message = logMsg;
@@ -37,7 +37,7 @@ namespace DataHandler
             pid = 0;
         }
 
-        public AOULogMessage(uint logTime, string logMsg, uint logPrio, uint logProcessId)
+        public AOULogMessage(long logTime, string logMsg, uint logPrio, uint logProcessId)
         {
             time = logTime;
             message = logMsg;

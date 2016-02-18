@@ -67,12 +67,20 @@ namespace DataHandler
         }
 
         #region Common
-        public static string GetNextTag(string textLine)
+        public static string GetNextTag(string textLine, out string strBeforeTag)
         {
             Regex r = new Regex("<[a-zA-Z]+>");
             Match m = r.Match(textLine, 0);
+            strBeforeTag = "";
             if (m.Success)
-                return m.Groups[0].Value.Substring(1, m.Groups[0].Value.Length-2);
+            {
+                string tag = m.Groups[0].Value.Substring(1, m.Groups[0].Value.Length - 2);
+                if (textLine.IndexOf(tag) > 1)
+                {
+                    strBeforeTag = textLine.Substring(0, textLine.IndexOf(tag)-1);
+                }
+                return tag;
+            }
             else
                 return "";
         }
