@@ -129,16 +129,25 @@ namespace DataHandler
             return textDataStream.Length;
        }
 
+        public uint GetNowToMs()
+        {
+            var now = DateTime.Now;
+            TimeSpan ts = new TimeSpan(0, now.Hour, now.Minute, now.Second);
+
+            return (uint)ts.TotalMilliseconds;
+        }
+
         public void SendToPlc(string text)
         {
+
             if (runMode == RunType.Random)
             {
-                logMessages.Add(new AOULogMessage(1000 * 4, "SendToPlc: "+ text));
+                logMessages.Add(new AOULogMessage(GetNowToMs(), "SendToPlc: "+ text, 12, 0));
                 // ToDo: Save to log file
             }
             else if (runMode == RunType.File)
             {
-                logMessages.Add(new AOULogMessage(1000 * 4, "SendToPlc: " + text));
+                logMessages.Add(new AOULogMessage(GetNowToMs(), "SendToPlc: " + text, 12, 0));
                 // ToDo: Save to log file
             }
             else if (runMode == RunType.Serial && serialData != null)
@@ -179,7 +188,6 @@ namespace DataHandler
             AOUValvesData valvesData;
             AOUIMMData immData;
 
-
             long min_ms = long.MaxValue;
             long max_ms = 0;
 
@@ -198,7 +206,7 @@ namespace DataHandler
                 string nextTag = AOUInputParser.GetNextTag(textDataStream);
                 if (nextTag.Length > 0)
                 {
-                    logList.AddRange(AOUInputParser.ParseTagLogMessages(nextTag, textDataStream));
+                    logList.AddRange(AOUInputParser.ParseBetweenTagsMessages(nextTag, textDataStream));
                 }
 
                 if (nextTag == AOUInputParser.tagTemperature)
@@ -364,6 +372,9 @@ namespace DataHandler
         #region PublicMethods
         public void Update()
         {
+            List<AOULogMessage> newLogMessages;
+            List<Power> newPowerValues;
+
             if (runMode == RunType.Random && randomData != null)
             {
                 if (randomData.NewRandomLogMessageAvailable())
@@ -393,7 +404,10 @@ namespace DataHandler
             {
                 if (IsDataAvailable())
                 {
-                    powerValues = GetTextDataList(out logMessages);
+                    newPowerValues = GetTextDataList(out newLogMessages);
+
+                    powerValues.AddRange(newPowerValues);
+                    logMessages.AddRange(newLogMessages);
                     /*
                     var dt = DateTime.Now;
                     uint time = (uint)(dt.Hour * 60 * 1000 + dt.Minute * 1000 + DateTime.Now.Millisecond);

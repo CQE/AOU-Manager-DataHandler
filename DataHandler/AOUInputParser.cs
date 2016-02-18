@@ -305,18 +305,20 @@ namespace DataHandler
 
         public static bool ParseLongTime(string textline, out long time_ms) // Not to be misunderstood
         {
-
             return ParseLong(tagSubTagTime, textline, out time_ms);
         }
 
-        public static List<AOULogMessage> ParseTagLogMessages(string tag, string text)
+        public static List<AOULogMessage> ParseBetweenTagsMessages(string tag, string text)
         {
             List<AOULogMessage> logs = new List<AOULogMessage>();
 
             string tagtext;
+            long time_ms = 0;
             if (ParseString(tag, text, out tagtext))
             {
-                Regex r = new Regex("<\\/([a-zA-Z]+)>([^<]+)<");
+                ParseLongTime(tagtext, out time_ms); // <Time> value before message
+
+                var r = new Regex("<\\/([a-zA-Z]+)>([^<]+)<"); // match "</tag>message<"
                 var matches = r.Matches(tagtext, 0);
                 if (matches.Count > 0)
                 {
@@ -328,7 +330,7 @@ namespace DataHandler
                         string between = s.Substring(n + 1, s.Length - n - 2).Trim();
                         if (between.Length > 2)
                         {
-                            logs.Add(new AOULogMessage(1000, between, 10, 0));
+                            logs.Add(new AOULogMessage((uint)time_ms, between, 10, 0));
                         }
                     }
                 }

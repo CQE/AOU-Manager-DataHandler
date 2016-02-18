@@ -27,88 +27,72 @@ namespace DataHandlerTestApp
     {
         AOURouter router;
 
-        private DispatcherTimer dTimer;
+        private DispatcherTimer dTimerUpdateData;
+        private DispatcherTimer dTimerUpdateText;
+
+        string filenamestr = "";
+        int numRandom = 30;
+        int msBetween = 1000;
 
         public MainPage()
         {
             this.InitializeComponent();
 
-            dTimer = new DispatcherTimer();
-            dTimer.Tick += UpdateTick;
-            dTimer.Interval = new TimeSpan(0, 0, 1);
-            dTimer.Start();
-       }
+            comboBox.Items.Add("File");
+            comboBox.Items.Add("Serial");
+            comboBox.Items.Add("Random");
 
-        void UpdateTick(object sender, object e)
+            dTimerUpdateData = new DispatcherTimer();
+            dTimerUpdateData.Tick += UpdateDataTick;
+            dTimerUpdateData.Interval = new TimeSpan(0, 0, 0, 0, 250);
+
+            dTimerUpdateText = new DispatcherTimer();
+            dTimerUpdateText.Tick += UpdateTextTick;
+            dTimerUpdateText.Interval = new TimeSpan(0, 0, 0, 1, 0);
+
+            dTimerUpdateData.Start();
+            dTimerUpdateText.Start();
+        }
+
+        void UpdateDataTick(object sender, object e)
         {
             if (router != null)
             {
-                textBox.Text += router.GetLogStr();
+                textBox.Text += router.GetLogStr(); // Show if new log messages
                 router.Update();
-                /*
-                if (router.IsDataAvailable())
+            }
+        }
+
+        void UpdateTextTick(object sender, object e)
+        {
+            if (router != null)
+            {
+                if (router.runMode == AOURouter.RunType.Random)
                 {
-                    textBox.Text += router.GetTextData() + "\r\n";
+                    textBox.Text += GetNewRandomText();
                 }
-                */
+                textBox.Text += router.GetLogStr(); // Show if new log messages
             }
         }
 
-        private void TestSerialComButton_Click(object sender, RoutedEventArgs e)
+        private void InitSerialCom()
         {
-            router = new AOURouter(AOURouter.RunType.Serial, "com3, 9600");
-            loadFileButton.Content = "Send Data";
-        }
-
-        private void TestRandomDataButton_Click(object sender, RoutedEventArgs e)
-        {
-            router = new AOURouter(AOURouter.RunType.Random, "30, 1000");
-
-            AOULogMessage[] msg = router.GetLastLogMessages(10);
-            Power[] pwr = router.GetLastPowerValues(10);
-
-            for (int i = 0; i < 160; i++)
+            string comsettings = "COM4, 9600";
+            if (this.fileName.Text.ToLower().StartsWith("com"))
             {
-                router.Update();
+                comsettings = this.fileName.Text;
             }
-
-            bool bp = router.NewPowerDataIsAvailable();
-            Power p = router.GetLastPowerValue();
-
-            bool bm = router.NewLogMessagesAreAvailable();
-            AOULogMessage[] msgn = router.GetNewLogMessages();
-
-            AOULogMessage[] msg2 = router.GetLastLogMessages(10);
-            Power[] pwr2 = router.GetLastPowerValues(10);
-
-            AOULogMessage[] msg3 = router.GetLastLogMessages(100);
-            Power[] pwr3 = router.GetLastPowerValues(100);
-
-            bool ok = bm == bp;
-        }
-
-        private async void PickFile()
-        {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.ViewMode = PickerViewMode.List;
-            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary; // Todo: usb, cloud
-            picker.FileTypeFilter.Add(".txt");
-
-            StorageFile file = await picker.PickSingleFileAsync();
-            if (file != null)
+            else
             {
-                // Save only path relative to User Pictures folder
-                fileName.Text = file.Path.Substring(file.Path.IndexOf("Pictures") + ("Pictures").Length);
-                router = new AOURouter(AOURouter.RunType.File, fileName.Text);
+                this.fileName.Text = comsettings;
             }
+
+            router = new AOURouter(AOURouter.RunType.Serial, comsettings);
+            pickFileButton.Visibility = Visibility.Collapsed;
+            // pickFileButton.Content = "Send Data";
         }
 
-        private void LoadFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            PickFile();
-        }
-
-        private void TestLoadedFileButton_Click(object sender, RoutedEventArgs e)
+        private void TestLogAndPowerLists()
         {
             var logList = router.GetLastLogMessages(30);
             var pwrList = router.GetLastPowerValues(30);
@@ -124,7 +108,7 @@ namespace DataHandlerTestApp
                 this.textBox.Text += "No Log data\r\n";
             }
 
-            if (pwrList.Length> 0)
+            if (pwrList.Length > 0)
             {
                 foreach (var power in pwrList)
                 {
@@ -140,10 +124,99 @@ namespace DataHandlerTestApp
             }
         }
 
+        private void TestSerialData()
+        {
+            TestLogAndPowerLists();
+        }
+
+
+        private void TestRandomData()
+        {
+            TestLogAndPowerLists();
+        }
+
+
+        private void InitRandomData()
+        {
+            string randomSettings = String.Format("{0}, {1}", numRandom, msBetween);
+            if (fileName.Text.Length  > 0 && fileName.Text[0] >= '1' && fileName.Text[0] <= '9')
+            {
+                randomSettings = this.fileName.Text;
+            }
+            else
+            {
+                this.fileName.Text = randomSettings;
+            }
+            pickFileButton.Visibility = Visibility.Collapsed;
+
+            router = new AOURouter(AOURouter.RunType.Random, randomSettings);
+        }
+
+        private async void PickFile()
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.ViewMode = PickerViewMode.List;
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary; // Todo: usb, cloud
+            picker.FileTypeFilter.Add(".txt");
+
+            StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                // Save only path relative to User Pictures folder
+                filenamestr = file.Path.Substring(file.Path.IndexOf("Pictures") + ("Pictures").Length);
+                fileName.Text = filenamestr;
+                router = new AOURouter(AOURouter.RunType.File, fileName.Text);
+            }
+        }
+
+        private void PickFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            PickFile();
+        }
+
+        private string GetNewRandomText()
+        {
+            string text = "";
+
+            return text;
+        }
+
+        private void TestLoadedFile()
+        {
+            pickFileButton.Visibility = Visibility.Visible;
+            if (filenamestr.Length == 0)
+            {
+                PickFile();
+            }
+            else
+            {
+                TestLogAndPowerLists();
+            }
+        }
+
         private void CreateFileButton_Click(object sender, RoutedEventArgs e)
         {
             this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
         }
 
+        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (comboBox.SelectedIndex)
+            {
+                case 0: TestLoadedFile(); break;
+                case 1: InitSerialCom(); break;
+                case 2: InitRandomData();  break;
+            }
+        }
+
+        private void TestButton_Click(object sender, RoutedEventArgs e)
+        {
+            switch (comboBox.SelectedIndex)
+            {
+                case 0: TestLoadedFile(); break;
+                case 1: TestSerialData(); break;
+                case 2: TestRandomData(); break;
+            }
+        }
     }
 }

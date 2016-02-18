@@ -29,7 +29,10 @@ namespace DataHandler
         {
             idleMode, heatingMode, coolingMode, fixedCyclingMode, autoWidthIMMMode,
             tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
-            toolHeatingFeedPause, toolCoolingFeedPause, hotDelayTime, coldDelayTime
+            toolHeatingFeedPause, toolCoolingFeedPause, hotDelayTime, coldDelayTime,
+            THotTankAlarmLowThreshold, TColdTankAlarmHighThreshold,
+            TReturnThresholdCold2Hot, TReturnThresholdHot2Cold,
+            TBufferHotLowerLimit, TBufferMidRefThreshold, TBufferColdUpperLimit
         }
 
         public enum FeedType { Unknown, Cold, Hot };
