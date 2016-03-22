@@ -6,8 +6,60 @@ using System.Threading.Tasks;
 
 namespace DataHandler
 {
-    class AOUSettings
+    public class AOUSettings
     {
-        // ToDo
+
+        public struct RemoteSetting
+        {
+            public string Remote;
+            public string Port;
+            public string User;
+            public string Password;
+
+            public RemoteSetting(string remote, string port, string user, string password)
+            {
+                Remote = remote;
+                Port = port;
+                User = user;
+                Password = password;
+            }
+        }
+
+        public struct FileSetting
+        {
+            public string SourceType;
+            public string FilePath;
+
+            public FileSetting(string sourceType, string filePath)
+            {
+                SourceType = sourceType;
+                FilePath = filePath;
+            }
+        }
+
+        public struct SerialSetting
+        {
+            public string ComPort;
+            public uint BaudRate;
+
+            public SerialSetting(string comPort, uint baudRate)
+            {
+                ComPort = comPort;
+                BaudRate = baudRate;
+            }
+        }
+
+        public struct RandomSetting
+        {
+            public uint NumValues;
+            public uint MsBetween;
+
+            public RandomSetting(uint numValues, uint msBetween)
+            {
+                NumValues = numValues;
+                MsBetween = msBetween;
+            }
+        }
+
     }
 }

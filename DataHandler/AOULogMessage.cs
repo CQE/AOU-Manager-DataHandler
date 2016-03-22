@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace DataHandler
 {
- 
+
     public struct AOULogMessage
     {
-        public long time
+        public string time
         {
             get; set;
         }
@@ -31,7 +31,7 @@ namespace DataHandler
 
         public AOULogMessage(long logTime, string logMsg)
         {
-            time = logTime;
+            time = AOUHelper.msToTimeSpanStr(logTime);
             message = logMsg;
             prio = 0;
             pid = 0;
@@ -39,10 +39,15 @@ namespace DataHandler
 
         public AOULogMessage(long logTime, string logMsg, uint logPrio, uint logProcessId)
         {
-            time = logTime;
+            time = AOUHelper.msToTimeSpanStr(logTime);
             message = logMsg;
             prio = logPrio;
             pid = logProcessId;
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{0}, {1}, {2}, {3}", time, message, prio, pid);
         }
     }
 }

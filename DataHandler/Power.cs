@@ -99,5 +99,23 @@ namespace DataHandler
         public double ValveCoolant { get; set; } // on/off
 
         public double PowerHeating { get; set; } // on/off
+
+        public override string ToString()
+        {
+            try { 
+                string fmt = "{0}:{1}, Tht:{2:0.}, Tct:{3:0.}, Tret:{4:0.}, Tra:{5:0.}, Trf:{6:0.}";
+                fmt += ", (Tbuf h:{7:0.}, m:{8:0.}, c:{9:0.})";
+                fmt += ", Theco:{10:0.}, Thoo:{11:0.}, ph:{12:0.}, (Valve fh:{13:0.}, fc:{14:0.}, ret:{15:0.}, cool:{16:0.})";
+                return String.Format(fmt, AOUHelper.msToTimeSpanStr(ElapsedTime), State.ToString(), THotTank, TColdTank, 
+                    TReturnValve, TReturnActual, TReturnForecasted,
+                    TBufferHot, TBufferMid, TBufferCold, 
+                    THeatExchangerCoolantOut, THeaterOilOut, PowerHeating, 
+                    ValveFeedHot, ValveFeedCold, ValveReturn, ValveCoolant);
+            }
+            catch (Exception e)
+            {
+                return e.Message;
+            }
+        }
     }
 }

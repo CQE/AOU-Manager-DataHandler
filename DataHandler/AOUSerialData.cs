@@ -11,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace DataHandler
 {
-    public class AOUSerialData
+    public class AOUSerialData: AOUData
     {
-        public bool Connected { get; private set; }
- 
         private SerialDevice serialPort = null;
 
         private CancellationTokenSource ReadCancellationTokenSource;
@@ -25,72 +23,51 @@ namespace DataHandler
         private string textToSend = "";
         private string receivedText = "";
 
-        private string logstr = "";
-        private string errstr = "";
+        private AOUSettings.SerialSetting setting;
 
-        public bool IsDataAvailable()
+        public AOUSerialData(AOUSettings.SerialSetting serialSetting) : base()
         {
-            return receivedText.Length > 0;
-        }
-
-        public bool IsError()
-        {
-            return errstr.Length > 0;
-        }
-
-        public string GetTextData()
-        {
-            string text = receivedText;
-            receivedText = "";
-
-            return text;
-        }
-
-        public string GetLogText()
-        {
-            string text = logstr;
-            logstr = "";
-
-            return text;
-        }
-
-        public string GetErrText()
-        {
-            return errstr;
-        }
-
-        public AOUSerialData(string comportSettings)
-        {
-            logstr = "";
-            errstr = "";
-            Connected = false;
-            string comPort = "COM1";
-            uint baudRate = 9600; // 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200...
-            uint baud2 = 9600;
-            if (comportSettings.Length > 3)
-            { 
-                string[] parameters = comportSettings.Split(',');
-                if (parameters.Length > 0 && parameters[0].Length > 0)
-                {
-                    comPort = parameters[0].ToUpper();
-                }
-                if (parameters.Length > 1 && uint.TryParse(parameters[1], out baud2))
-                {
-                    baudRate = baud2;
-                }
-            }
-
-            InitComPort(comPort, baudRate);
+            setting = serialSetting;
         }
 
         ~AOUSerialData()
         {
-            CancelReadTask();
             if (serialPort != null)
             {
                 serialPort.Dispose();
                 serialPort = null;
             }
+        }
+
+        public override void Connect()
+        {
+            base.Connect();
+            InitComPort(setting.ComPort, setting.BaudRate);
+        }
+
+        public override void Disconnect()
+        {
+            base.Disconnect();
+            CancelReadTask();
+        }
+
+        public override bool SendData(string data)
+        {
+            textToSend += data;
+            Send();
+            return true;
+        }
+
+        public override void UpdateData()
+        {
+            base.GetTextDataList();
+        }
+
+        protected override string GetTextData()
+        {
+            string text = receivedText;
+            receivedText = "";
+            return text;
         }
 
         private void ConfigureSerialPort(uint baudrate)
@@ -103,9 +80,8 @@ namespace DataHandler
             serialPort.DataBits = 8;
             serialPort.Handshake = SerialHandshake.None;
 
-            logstr += "ProdId:" + serialPort.UsbProductId + ", ";
-            logstr += "vendorId:" + serialPort.UsbVendorId + "\r\n";
-            logstr += "Baudrate:" + serialPort.BaudRate + ", Parity:" + serialPort.Parity + ", Databits:" + serialPort.DataBits + ", Stopbits:" + serialPort.StopBits + ", No Handshake\r\n";
+            AddDataLogText("ProdId:" + serialPort.UsbProductId + ", " + "vendorId:" + serialPort.UsbVendorId);
+            AddDataLogText("Baudrate:" + serialPort.BaudRate + ", Parity:" + serialPort.Parity + ", Databits:" + serialPort.DataBits + ", Stopbits:" + serialPort.StopBits + ", No Handshake");
         }
 
         private async void InitComPort(string portName, uint baudRate)
@@ -122,7 +98,7 @@ namespace DataHandler
                     serialPort = await SerialDevice.FromIdAsync(entry.Id);
                     if (serialPort != null && serialPort.PortName == portName)
                     {
-                        logstr += "Found serial device: " + dev.Name + " on " + serialPort.PortName + "\r\n";
+                        AddDataLogText("Found serial device: " + dev.Name + " on " + serialPort.PortName);
                         ConfigureSerialPort(baudRate);
                         break;
                     }
@@ -133,29 +109,23 @@ namespace DataHandler
                     ReadCancellationTokenSource = new CancellationTokenSource();
                     Listen();
                     Connected = true;
-                    logstr += "Listening to " + serialPort.PortName + "\r\n";
+                    AddDataLogText("Listening to " + serialPort.PortName);
                 }
                 else
                 {
-                    logstr += "Can not connect to Serial Device " + portName + "\r\n";
+                    AddDataLogText("Can not connect to Serial Device " + portName);
                     Connected = false;
                 }
             }
             catch (Exception ex)
             {
-                logstr += "Connection exception: " + ex.Message + "\r\n";
+                AddDataLogText("Connection exception: " + ex.Message);
             }
         }
 
         /**************************************************/
         // Sending Data
         /**************************************************/
-        public bool SendData(string text_data)
-        {
-            textToSend += text_data;
-            Send();
-            return true;
-        }
 
         private async Task WriteAsync()
         {
@@ -180,12 +150,12 @@ namespace DataHandler
                 }
                 else
                 {
-                    logstr += "Sending data, Not connected to serial port\r\n";
+                    AddDataLogText("Sending data, Not connected to serial port");
                 }
             }
             catch (Exception ex)
             {
-                logstr += "Error sending data: " + ex.Message + "\r\n";
+                AddDataLogText("Error sending data: " + ex.Message);
             }
             finally // Cleanup
             {
@@ -250,7 +220,7 @@ namespace DataHandler
             {
                 if (ex.GetType().Name == "TaskCanceledException")
                 {
-                    logstr += "Reading task was cancelled, closing device and cleaning up\r\n";
+                    AddDataLogText("Reading task was cancelled, closing device and cleaning up");
                     if (serialPort != null)
                     {
                         serialPort.Dispose();
@@ -259,7 +229,7 @@ namespace DataHandler
                 }
                 else
                 {
-                    logstr += "Cancel error: " + ex.Message + "\r\n";
+                    AddDataLogText("Cancel error: " + ex.Message);
                 }
             }
             finally

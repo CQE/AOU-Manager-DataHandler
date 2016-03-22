@@ -11,6 +11,7 @@ namespace DataHandler
 
     public class AOUInputParser
     {
+        #region Tag Constants
         public const string tagSubTagTime = "Time"; //
 
         public const string tagTemperature = "temperature";
@@ -59,30 +60,90 @@ namespace DataHandler
         public static bool ValidPowerTag(string tag)
         {
             if (tag == tagTemperature || tag == tagFeeds || tag == tagSequence ||
-                tag == tagValves)
+                tag == tagLevels || tag == tagValves)
             {
                 return true;
             }
             return false;
         }
 
+        #endregion
+
         #region Common
-        public static string GetNextTag(string textLine, out string strBeforeTag)
+        public static string GetNextTag(string text, out string tagContent, out List<string> logs, out int numHandled)
         {
-            Regex r = new Regex("<[a-zA-Z]+>");
-            Match m = r.Match(textLine, 0);
-            strBeforeTag = "";
-            if (m.Success)
+            Regex rTag = new Regex("<[a-zA-Z]+>");
+            logs = new List<string>();
+            tagContent = "";
+            numHandled = 0;
+
+            int lastTextPos = 0;
+            bool eot = false;
+            string tag = "";
+            int tlen = text.Length;
+            string textLine = "";
+            do
             {
-                string tag = m.Groups[0].Value.Substring(1, m.Groups[0].Value.Length - 2);
-                if (textLine.IndexOf(tag) > 1)
+                tag = "";
+                textLine = "";
+                if (text.IndexOf("\r\n") > 0)
                 {
-                    strBeforeTag = textLine.Substring(0, textLine.IndexOf(tag)-1);
+                    int endPos = text.IndexOf("\r\n", lastTextPos + 1);
+                    if (endPos >= 0)
+                    { 
+                        textLine = text.Substring(lastTextPos, endPos - lastTextPos).Trim();
+                        lastTextPos = endPos + 1;
+                    }
+                    else
+                    {
+                        lastTextPos = lastTextPos + 2;
+                    }
                 }
-                return tag;
-            }
-            else
-                return "";
+                /* If only LF*/
+                else if (text.IndexOf("\n") > 0)
+                {
+                    if ((lastTextPos+1) < tlen)
+                    { 
+                        int endPos = text.IndexOf("\n", lastTextPos + 1);
+                        if (endPos >= 0)
+                        {
+                            textLine = text.Substring(lastTextPos, endPos - lastTextPos).Trim();
+                            lastTextPos = endPos + 1;
+                        }
+                        else
+                        {
+                            lastTextPos = lastTextPos + 1;
+                        }
+                    }
+                    else
+                    {
+                        int err = lastTextPos;
+                    }
+                }
+
+                if (!eot && textLine.Length > 0)
+                { 
+                    Match m = rTag.Match(textLine, 0);
+                    if (m.Success)
+                    {
+                        tag = m.Groups[0].Value.Substring(1, m.Groups[0].Value.Length - 2);
+                        int tagEndPos = 0;
+                        FindTagAndExtractText(tag, textLine, out tagContent, out tagEndPos);
+                        break;
+                    }
+                    else
+                    {
+                        logs.Add(textLine);
+                        textLine = "";
+                    }
+                }
+                else
+                {
+                    bool dbg = true;
+                }
+            } while (tag == "" && textLine.Length > 0);
+            numHandled = lastTextPos;
+            return tag;
         }
 
         public static bool FindTag(string tag, string textLine)
@@ -91,15 +152,8 @@ namespace DataHandler
             string endTag = "</" + tag + ">";
             int pos1 = textLine.IndexOf(startTag);
             int pos2 = textLine.IndexOf(endTag);
-            if (pos1 != -1 && pos2 != -1)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
 
+            return (pos1 != -1 && pos2 != -1);
         }
 
         public static bool FindTagAndExtractText(string tag, string textLine, out string tagText, out int endPos)
@@ -224,40 +278,36 @@ namespace DataHandler
                                     time_ms, tempData.imm_setting_val); // 3 - 4
         }
 
-        public static string CreateFeedsXmlString(long time_ms, AOUFeedData data)
+        public static string CreateHotFeedXmlString(long time_ms, AOUHotFeedData data)
         {
-            if (data.AOUFeedDataHeader == AOUTypes.AOUColdFeedDataId) // Cold feed
-            {
-                return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
-                                        tagFeeds, tagSubTagTime, tagFeedsCold, // 0 - 2
-                                        tagFeedsPrev, tagFeedsNew, // 3, 4
-                                        time_ms, data.prevFeedTemp, data.newFeedTemp); // 5, 6, 7
-            }
-            else // Hot feed
-            {
-                return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
-                                        tagFeeds, tagSubTagTime, tagFeedsCold, // 0 - 2
-                                        tagFeedsPrev, tagFeedsNew, // 3, 4
-                                        time_ms, data.prevFeedTemp, data.newFeedTemp); // 5, 6, 7
-            }
+            return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
+                                    tagFeeds, tagSubTagTime, tagFeedsHot, // 0 - 2
+                                    tagFeedsPrev, tagFeedsNew, // 3, 4
+                                    time_ms, data.prevFeedTemp, data.newFeedTemp); // 5, 6, 7
         }
 
-        public static string CreateLevelsXmlString(long time_ms, AOULevelData data)
+        public static string CreateColdFeedXmlString(long time_ms, AOUColdFeedData data)
         {
-            if (data.AOULevelDataHeader == AOUTypes.AOUColdLevelDataId) // Cold feed
-            {
+                return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
+                                        tagFeeds, tagSubTagTime, tagFeedsCold, // 0 - 2
+                                        tagFeedsPrev, tagFeedsNew, // 3, 4
+                                        time_ms, data.prevFeedTemp, data.newFeedTemp); // 5, 6, 7
+        }
+
+        public static string CreateHotLevelXmlString(long time_ms, AOUHotLevelData data)
+        {
                 return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
                                         tagLevels, tagSubTagTime, tagLevelsSubTagHot, // 0 - 2
                                         tagLevelsSubTagPrev, tagLevelsSubTagNew, // 3, 4
                                         time_ms, data.prevLevel, data.newLevel); // 5, 6, 7
-            }
-            else // Hot feed
-            {
+        }
+
+        public static string CreateColdLevelXmlString(long time_ms, AOUColdLevelData data)
+        {
                 return String.Format("<{0}><{1}>{5}</{1}><{2}> <{3}>{6}</{3}><{4}>{7}</{4}> </{2}></{0}>",
                                         tagFeeds, tagSubTagTime, tagLevelsSubTagCold, // 0 - 2
                                         tagFeedsPrev, tagFeedsNew, // 3, 4
                                         time_ms, data.prevLevel, data.newLevel); // 5, 6, 7
-            }
         }
 
         public static string CreateValvesXmlString(long time_ms, AOUValvesData data)
@@ -300,6 +350,10 @@ namespace DataHandler
             long time_ms = 0;
             if (ParseLong(tagSubTagTime, textline, out time_ms))
             {
+                if (time_ms > 283200)
+                {
+                    long t2 = time_ms;
+                }
                 AOUTypes.TimeMsToAOUModelTime(time_ms, out time_min_of_week, out time_ms_of_min);
                 return true;
             }
@@ -316,42 +370,36 @@ namespace DataHandler
             return ParseLong(tagSubTagTime, textline, out time_ms);
         }
 
-        public static List<AOULogMessage> ParseBetweenTagsMessages(string tag, string text)
+        public static List<string> ParseBetweenTagsMessages(string tagText)
         {
-            List<AOULogMessage> logs = new List<AOULogMessage>();
+            List<string> logs = new List<string>();
 
-            string tagtext;
             long time_ms = 0;
-            if (ParseString(tag, text, out tagtext))
-            {
-                ParseLongTime(tagtext, out time_ms); // <Time> value before message
+            ParseLongTime(tagText, out time_ms); // <Time> value before message
 
-                var r = new Regex("<\\/([a-zA-Z]+)>([^<]+)<"); // match "</tag>message<"
-                var matches = r.Matches(tagtext, 0);
-                if (matches.Count > 0)
+            var r = new Regex("<\\/([a-zA-Z]+)>([^<]+)<"); // match "</tag>message<"
+            var matches = r.Matches(tagText, 0);
+            if (matches.Count > 0)
+            {
+                foreach (var match in matches)
                 {
-                    foreach (var match in matches)
+                    string s = match.ToString();
+                    int n = s.IndexOf('>');
+                    string tagBefore = s.Substring(2, n - 2);
+                    string between = s.Substring(n + 1, s.Length - n - 2).Trim();
+                    if (between.Length > 2)
                     {
-                        string s = match.ToString();
-                        int n = s.IndexOf('>');
-                        string tagBefore = s.Substring(2, n - 2);
-                        string between = s.Substring(n + 1, s.Length - n - 2).Trim();
-                        if (between.Length > 2)
-                        {
-                            logs.Add(new AOULogMessage((uint)time_ms, between, 10, 0));
-                        }
+                        logs.Add(between); // Todo time
                     }
                 }
             }
             return logs;
         }
 
-        public static bool ParseTemperature(string textLine, out AOUTemperatureData tempData, out List<AOULogMessage> logList, out int endpos)
+        public static bool ParseTemperature(string tagText, out AOUTemperatureData tempData)
         {
             // textLine = "<temperature><Time>104898416</Time><Hot>122</Hot><Cold>56</Cold><Ret>68</Ret><Cool>40</Cool></temperature>";
-            string tempText = "";
 
-            tempData.AOUTempDataHeader = AOUTypes.AOUTempDataId;
             tempData.time_min_of_week = 0;
             tempData.time_ms_of_min = 0;
             tempData.coldTankTemp = AOUTypes.UInt16_NaN; 
@@ -359,98 +407,68 @@ namespace DataHandler
             tempData.retTemp = AOUTypes.UInt16_NaN;
             tempData.coolerTemp = AOUTypes.UInt16_NaN;
 
-            logList = new List<AOULogMessage>();
-
-            if (FindTagAndExtractText(tagTemperature, textLine, out tempText, out endpos))
-            {
-                return 
-                    ParseWordTime(tempText, out tempData.time_min_of_week, out tempData.time_ms_of_min) &&
-                    ParseWord(tagTempSubTagHot, tempText, out tempData.hotTankTemp) &&
-                    ParseWord(tagTempSubTagCold, tempText, out tempData.coldTankTemp) &&
-                    ParseWord(tagTempSubTagRet, tempText, out tempData.retTemp) &&
-                    ParseWord(tagTempSubTagCool, tempText, out tempData.coolerTemp);
-            }
-            return false;
+            return  ParseWordTime(tagText, out tempData.time_min_of_week, out tempData.time_ms_of_min) &&
+                    ParseWord(tagTempSubTagHot, tagText, out tempData.hotTankTemp) &&
+                    ParseWord(tagTempSubTagCold, tagText, out tempData.coldTankTemp) &&
+                    ParseWord(tagTempSubTagRet, tagText, out tempData.retTemp) &&
+                    ParseWord(tagTempSubTagCool, tagText, out tempData.coolerTemp);
         }
 
-        public static bool ParseValves(string textLine, out AOUValvesData valvesData, out int endpos)
+        public static bool ParseValves(string tagText, out AOUValvesData valvesData)
         {
             // textLine = "<valves><Time>104903816</Time><Ret><Prev>93</Prev><New>80</New></Ret></valves>";
-            string tempText = "";
 
-            valvesData.AOUValvesDataHeader = AOUTypes.AOUValvesDataId;
             valvesData.time_min_of_week = 0;
             valvesData.time_ms_of_min = 0;
             valvesData.prevValveReturnTemp = AOUTypes.UInt16_NaN;
             valvesData.newValveReturnTemp = AOUTypes.UInt16_NaN;
 
-            if (FindTagAndExtractText(tagValves, textLine, out tempText, out endpos))
-            { // ToDo Check tagValvesSubTagRet
-                if (ParseWordTime(tempText, out valvesData.time_min_of_week, out valvesData.time_ms_of_min) &&
-                    ParseWord(tagValvesSubTagRetPrev, tempText, out valvesData.prevValveReturnTemp) &&
-                    ParseWord(tagValvesSubTagRetNew, tempText, out valvesData.newValveReturnTemp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
+            // ToDo Check tagValvesSubTagRet
+            return ParseWordTime(tagText, out valvesData.time_min_of_week, out valvesData.time_ms_of_min) &&
+                   ParseWord(tagValvesSubTagRetPrev, tagText, out valvesData.prevValveReturnTemp) &&
+                   ParseWord(tagValvesSubTagRetNew, tagText, out valvesData.newValveReturnTemp);
         }
 
-        public static bool ParseFeeds(string textLine, out AOUFeedData feedData, out int endpos)
+        public static bool ParseHotFeed(string tagText, out AOUHotFeedData feedData)
         {
             // textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
             // textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
-            string tempText = "";
-
-            feedData.AOUFeedDataHeader = AOUTypes.AOUHotFeedDataId;
             feedData.time_min_of_week = 0;
             feedData.time_ms_of_min = 0;
             feedData.prevFeedTemp = AOUTypes.UInt16_NaN;
             feedData.newFeedTemp = AOUTypes.UInt16_NaN;
 
-            if (FindTagAndExtractText(tagFeeds, textLine, out tempText, out endpos))
-            {
-                /*
-                if (FindTag(tagFeedsHot, tempText))
-                {
-                }
-                else 
-                */
-                if (FindTag(tagFeedsCold, tempText))
-                {
-                    feedData.AOUFeedDataHeader = AOUTypes.AOUColdFeedDataId;
-                }
-
-                if (ParseWordTime(tempText, out feedData.time_min_of_week, out feedData.time_ms_of_min) &&
-                    ParseWord(tagFeedsPrev, tempText, out feedData.prevFeedTemp) &&
-                    ParseWord(tagFeedsNew, tempText, out feedData.newFeedTemp))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
+            return (ParseWordTime(tagText, out feedData.time_min_of_week, out feedData.time_ms_of_min) &&
+                ParseWord(tagFeedsPrev, tagText, out feedData.prevFeedTemp) &&
+                ParseWord(tagFeedsNew, tagText, out feedData.newFeedTemp));
         }
 
-        public static bool ParseIMM(string textLine, out AOUIMMData immData, out int endpos)
+        public static bool ParseColdFeed(string tagText, out AOUColdFeedData feedData)
+        {
+            // textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
+            // textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
+            feedData.time_min_of_week = 0;
+            feedData.time_ms_of_min = 0;
+            feedData.prevFeedTemp = AOUTypes.UInt16_NaN;
+            feedData.newFeedTemp = AOUTypes.UInt16_NaN;
+
+            return (ParseWordTime(tagText, out feedData.time_min_of_week, out feedData.time_ms_of_min) &&
+                ParseWord(tagFeedsPrev, tagText, out feedData.prevFeedTemp) &&
+                ParseWord(tagFeedsNew, tagText, out feedData.newFeedTemp));
+        }
+
+        public static bool ParseIMM(string tagText, out AOUIMMData immData)
         {
             string tempText = "";
             UInt16 tempValue = 0;
 
-            immData.AOUIMMDataHeader = AOUTypes.AOUIMMDataId;
             immData.time_min_of_week = 0;
             immData.time_ms_of_min = 0;
             immData.imm_setting_val = AOUTypes.UInt16_NaN;
             immData.imm_setting_type = (UInt16)AOUTypes.IMMSettings.Nothing;
 
-            if (FindTagAndExtractText(tagIMM, textLine, out tempText, out endpos) &&
+            int endpos = 0;
+            if (FindTagAndExtractText(tagIMM, tagText, out tempText, out endpos) &&
                ParseWordTime(tempText, out immData.time_min_of_week, out immData.time_ms_of_min))
             {
                 if (ParseWord(tagIMMSubTagSetIMMError, tempText, out tempValue))
@@ -498,76 +516,65 @@ namespace DataHandler
             return immData.imm_setting_type != (UInt16)AOUTypes.IMMSettings.Nothing;
         }
  
-        public static bool ParseLevels(string textLine, out AOULevelData levelData, out int endpos)
+        public static bool ParseHotLevel(string tagText, out AOUHotLevelData levelData)
         {
             // textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
             // textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
-            string tempText = "";
-
-            levelData.AOULevelDataHeader = AOUTypes.AOUColdFeedDataId;
             levelData.time_min_of_week = 0;
             levelData.time_ms_of_min = 0;
             levelData.prevLevel = AOUTypes.UInt16_NaN;
             levelData.newLevel = AOUTypes.UInt16_NaN;
 
-            if (FindTagAndExtractText(tagLevels, textLine, out tempText, out endpos))
-            {
-                if (FindTag(tagLevelsSubTagHot, tempText))
-                {
-                    levelData.AOULevelDataHeader = AOUTypes.AOUHotLevelDataId;
-                }
 
-                if (ParseWordTime(tempText, out levelData.time_min_of_week, out levelData.time_ms_of_min) &&
-                    ParseWord(tagLevelsSubTagPrev, tempText, out levelData.prevLevel) &&
-                    ParseWord(tagLevelsSubTagNew, tempText, out levelData.newLevel))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
+            return  ParseWordTime(tagText, out levelData.time_min_of_week, out levelData.time_ms_of_min) &&
+                    ParseWord(tagLevelsSubTagPrev, tagText, out levelData.prevLevel) &&
+                    ParseWord(tagLevelsSubTagNew, tagText, out levelData.newLevel);
         }
 
-        public static bool ParseLog(string textLine, out long time_ms, out string logMsg, out int endpos)
+        public static bool ParseColdLevel(string tagText, out AOUColdLevelData levelData)
         {
-            string tempText;
+            // textLine = "<feeds><Time>104894473</Time><Hot><Prev>60</Prev></New>63,75</New></Hot></feeds>";
+            // textLine = "<feeds><Time>104878268</Time><Cold><Prev>65</Prev></New>60</New></Cold></feeds>";
+            levelData.time_min_of_week = 0;
+            levelData.time_ms_of_min = 0;
+            levelData.prevLevel = AOUTypes.UInt16_NaN;
+            levelData.newLevel = AOUTypes.UInt16_NaN;
+
+            return ParseWordTime(tagText, out levelData.time_min_of_week, out levelData.time_ms_of_min) &&
+                    ParseWord(tagLevelsSubTagPrev, tagText, out levelData.prevLevel) &&
+                    ParseWord(tagLevelsSubTagNew, tagText, out levelData.newLevel);
+        }
+
+        public static bool ParseLog(string tagText, out long time_ms, out string logMsg)
+        {
             time_ms = 0;
-            logMsg = "";
+            logMsg = "-";
             // textLine = "<log><Time>94962045</Time><Msg>Setup AOU version 1.1 ready (Plastics Unbound Ltd, Cyprus)</Msg></log>";
-            if (FindTagAndExtractText(tagLog, textLine, out tempText, out endpos))
+            return ParseLongTime(tagText, out time_ms) && ParseString(tagLogSubTagMsg, tagText, out logMsg);
+        }
+
+        public static bool ParseSeqState(string tagContent, out UInt16 state)
+        {
+            string stateStr;
+            state = 0;
+            if (ParseString(tagSeqSubTagState, tagContent, out stateStr))
             {
-                if (ParseLongTime(tempText, out time_ms) &&
-                    ParseString(tagLogSubTagMsg, tempText, out logMsg))
-                {
-                    return true;
-                }
+                state = (UInt16)AOUTypes.StringToStateType(stateStr);
+                return true;
             }
             return false;
         }
 
-        public static bool ParseSequence(string textLine, out AOUSeqData seqData, out int endpos)
+        public static bool ParseSequence(string tagText, out AOUSeqData seqData)
         {
-            string tempText;
-
-            seqData.AOUSeqDataHeader = AOUTypes.AOUSeqDataId;
             seqData.time_min_of_week = 0;
             seqData.time_ms_of_min = 0;
             seqData.state = (UInt16)AOUTypes.StateType.NOTHING;
             seqData.cycle = 0;
 
-            if (FindTagAndExtractText(tagSequence, textLine, out tempText, out endpos))
-            {
-                if (ParseWordTime(tempText, out seqData.time_min_of_week, out seqData.time_ms_of_min) &&
-                    ParseWord(tagSeqSubTagState, tempText, out seqData.state) &&
-                    ParseWord(tagSeqSubTagCycle, tempText, out seqData.cycle))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return ParseWordTime(tagText, out seqData.time_min_of_week, out seqData.time_ms_of_min) &&
+                   ParseSeqState(tagText, out seqData.state) &&
+                   ParseWord(tagSeqSubTagCycle, tagText, out seqData.cycle);
         }
         #endregion
 

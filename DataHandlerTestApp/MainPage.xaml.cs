@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Navigation;
 using DataHandler;
 using Windows.Storage.Pickers;
 using Windows.Storage;
+using Windows.ApplicationModel.DataTransfer;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -30,36 +31,45 @@ namespace DataHandlerTestApp
         private DispatcherTimer dTimerUpdateData;
         private DispatcherTimer dTimerUpdateText;
 
-        string filenamestr = "";
-        int numRandom = 30;
-        int msBetween = 1000;
+        AOUSettings.FileSetting fileSetting;
+        AOUSettings.RandomSetting randomSetting;
+        AOUSettings.SerialSetting serialSetting;
+
+        const string fileSettingStr = "pictures,";
+        const string randomSettingStr = "30,1000";
+        const string serialSettingStr = "COM3,9600";
 
         public MainPage()
         {
             this.InitializeComponent();
 
+            fileSetting = TextToFileSetting(fileSettingStr);
+            randomSetting = TextToRandomSetting(randomSettingStr);
+            serialSetting = TextToSerialSetting(serialSettingStr);
+
             comboBox.Items.Add("File");
             comboBox.Items.Add("Serial");
             comboBox.Items.Add("Random");
+            comboBox.Items.Add("Remote Client");
 
             dTimerUpdateData = new DispatcherTimer();
             dTimerUpdateData.Tick += UpdateDataTick;
             dTimerUpdateData.Interval = new TimeSpan(0, 0, 0, 0, 250);
+            dTimerUpdateData.Start();
 
             dTimerUpdateText = new DispatcherTimer();
             dTimerUpdateText.Tick += UpdateTextTick;
             dTimerUpdateText.Interval = new TimeSpan(0, 0, 0, 1, 0);
-
-            dTimerUpdateData.Start();
-            dTimerUpdateText.Start();
         }
 
         void UpdateDataTick(object sender, object e)
         {
             if (router != null)
             {
-                textBox.Text += router.GetLogStr(); // Show if new log messages
                 router.Update();
+                string log = router.GetLogStr();
+                if (log.Length > 0)
+                    textBox.Text += log + "\r\n"; //  if new router log messages
             }
         }
 
@@ -67,59 +77,181 @@ namespace DataHandlerTestApp
         {
             if (router != null)
             {
-                if (router.runMode == AOURouter.RunType.Random)
+                if (router.NewLogMessagesAreAvailable())
                 {
-                    textBox.Text += GetNewRandomText();
+                    var logs = router.GetNewLogMessages();
+                    foreach (var log in logs)
+                    {
+                        textBox.Text += log.ToString() + "\r\n"; // Show new AOU log messages
+                    }
                 }
-                textBox.Text += router.GetLogStr(); // Show if new log messages
+                if (StreamingMode.IsOn && router.NewPowerDataIsAvailable())
+                {
+                    textBox.Text += router.GetLastNewPowerValue().ToString() + "\r\n"; // Show if new log messages
+                }
+                /**/
             }
+        }
+
+        private void PickFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (comboBox.SelectedIndex == 0) PickFile();
+        }
+
+        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            dTimerUpdateText.Stop();
+            TextButton.IsEnabled = false;
+            XMLButton.IsEnabled = false;
+            switch (comboBox.SelectedIndex)
+            {
+                case 0: InitFileInput(); break;
+                case 1: InitSerialCom();
+                    break;
+                case 2: InitRandomData();
+                    TextButton.IsEnabled = true;
+                    XMLButton.IsEnabled = true;
+                    break;
+            }
+            if (comboBox.SelectedIndex >= 0)
+            {
+                StartStopButton.Content = "Start";
+            }
+            else
+            {
+                StartStopButton.Content = "Select";
+            }
+        }
+
+        private void StartStopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (StartStopButton.Content.ToString() == "Start")
+            {
+                switch (comboBox.SelectedIndex)
+                {
+                    case 0: StartFileData(); break;
+                    case 1: StartSerialData(); break;
+                    case 2: StartRandomData(); break;
+                }
+
+                textBox.Text = "";
+                dTimerUpdateText.Start();
+                StartStopButton.Content = "Stop";
+                comboBox.IsEnabled = false;
+                dataSettings.IsEnabled = false;
+            }
+            else if (StartStopButton.Content.ToString() == "Stop")
+            {
+                dTimerUpdateText.Stop();
+                switch (comboBox.SelectedIndex)
+                {
+                    case 0: StopFileData(); break;
+                    case 1: StopSerialData(); break;
+                    case 2: StopRandomData(); break;
+                }
+                comboBox.IsEnabled = true;
+                dataSettings.IsEnabled = true;
+                StartStopButton.Content = "Start";
+            }
+        }
+
+        /* Init */
+        private void InitFileInput()
+        {
+            dataSettings.Text = fileSettingStr;
+            pickFileButton.Visibility = Visibility.Visible;
+            if (dataSettings.Text.Length == 0) PickFile();
         }
 
         private void InitSerialCom()
         {
-            string comsettings = "COM3, 9600";
-            if (this.fileName.Text.ToLower().StartsWith("com"))
-            {
-                comsettings = this.fileName.Text;
-            }
-            else
-            {
-                this.fileName.Text = comsettings;
-            }
-            pickFileButton.Visibility = Visibility.Visible;
-            pickFileButton.Content = "Start";
+            dataSettings.Text = serialSettingStr;
+            pickFileButton.Visibility = Visibility.Collapsed;
         }
 
-        private void TestLogAndPowerLists()
+        private void InitRandomData()
         {
-            var logList = router.GetLastLogMessages(30);
-            var pwrList = router.GetLastPowerValues(30);
-            if (logList.Length > 0)
-            {
-                foreach (var log in logList)
-                {
-                    this.textBox.Text += String.Format("Log time:{0}, Log:{1}\r\n", log.time, log.message);
-                }
-            }
-            else
-            {
-                this.textBox.Text += "No Log data\r\n";
-            }
+            dataSettings.Text = randomSettingStr;
+            pickFileButton.Visibility = Visibility.Collapsed;
+        }
 
-            if (pwrList.Count > 0)
-            {
-                foreach (var power in pwrList)
-                {
-                    this.textBox.Text += String.Format("Time:{0}, State:{1}", power.ElapsedTime, power.State);
-                    this.textBox.Text += String.Format(", Hot tank temp:{0}, Cold tank temp:{1}, cool temp:{2}", power.THotTank, power.TColdTank, 0);
-                    this.textBox.Text += String.Format(", Return Actual:{0}, Return Forecasted:{1}, Valve return:{2}\r\n", power.TReturnActual, power.TReturnForecasted, power.TReturnValve);
-                    //this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n");
-                }
-            }
-            else
-            {
-                this.textBox.Text += "No Power data\r\n";
-            }
+        private string FileSettingToText(AOUSettings.FileSetting setting)
+        {
+            return String.Format("{0},{1}", setting.SourceType, setting.FilePath);
+        }
+
+        private string SerialSettingToText(AOUSettings.SerialSetting setting)
+        {
+            return String.Format("{0},{1}", setting.ComPort, setting.BaudRate);
+        }
+
+        private string RandomSettingToText(AOUSettings.RandomSetting setting)
+        {
+            return String.Format("{0},{1}", setting.NumValues, setting.MsBetween);
+        }
+
+        private AOUSettings.FileSetting TextToFileSetting(string text)
+        {
+            string[] arr = text.Split(',');
+            return new AOUSettings.FileSetting(arr[0], (arr[1]));
+        }
+
+        private AOUSettings.SerialSetting TextToSerialSetting(string text)
+        {
+            string[] arr = text.Split(',');
+            return new AOUSettings.SerialSetting(arr[0], uint.Parse(arr[1]));
+        }
+
+        private AOUSettings.RandomSetting TextToRandomSetting(string text)
+        {
+            string[] arr = text.Split(',');
+            return new AOUSettings.RandomSetting(uint.Parse(arr[0]), uint.Parse(arr[1]));
+        }
+
+
+        /* Start */
+        private void StartFileData()
+        {
+            router = new AOURouter(TextToFileSetting(dataSettings.Text));
+        }
+
+        private void StartSerialData()
+        {
+            router = new AOURouter(TextToSerialSetting(dataSettings.Text));
+        }
+
+        private void StartRandomData()
+        {
+            router = new AOURouter(TextToRandomSetting(dataSettings.Text));
+            TextButton.IsEnabled = true;
+            XMLButton.IsEnabled = true;
+        }
+
+
+        /* Stop*/
+        private void StopFileData()
+        {
+            router.Stop();
+            router = null;
+        }
+
+        private void StopSerialData()
+        {
+            router.Stop();
+            router = null;
+        }
+
+        private void StopRandomData()
+        {
+            router.Stop();
+            router = null;
+        }
+
+
+        /* Test */
+        private void TestFileData()
+        {
+            TestLogAndPowerLists();
         }
 
         private void TestSerialData()
@@ -133,44 +265,54 @@ namespace DataHandlerTestApp
             TestLogAndPowerLists();
         }
 
-
-        private void StopSerialData()
+        private void TextButton_Click(object sender, RoutedEventArgs e)
         {
-//            router.s;
-            pickFileButton.Content = "Start";
+            this.textBox.Text = AOURandomData.CreateRandomText(30, 0, 1000);
         }
 
-        private void StartSerialData()
+        private void XMLButton_Click(object sender, RoutedEventArgs e)
         {
-            router = new AOURouter(AOURouter.RunType.Serial, fileName.Text);
-            pickFileButton.Content = "Stop";
+            this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
         }
 
-        private void StopRandomData()
+        private void TestLogAndPowerLists()
         {
-//            router.s;
-            pickFileButton.Content = "Start";
-        }
-
-        private void StartRandomData()
-        {
-            router = new AOURouter(AOURouter.RunType.Random, fileName.Text);
-            pickFileButton.Content = "Stop";
-        }
-
-        private void InitRandomData()
-        {
-            string randomSettings = String.Format("{0}, {1}", numRandom, msBetween);
-            if (fileName.Text.Length  > 0 && fileName.Text[0] >= '1' && fileName.Text[0] <= '9')
+            if (router != null)
             {
-                randomSettings = this.fileName.Text;
+                var logList = router.GetLastLogMessages(100);
+                var pwrList = router.GetLastPowerValues(300);
+                if (logList.Length > 0)
+                {
+                    foreach (var log in logList)
+                    {
+                        this.textBox.Text += String.Format("Log time:{0}, {1}, msg:{2}\r\n", log.time, log.prio, log.message);
+                    }
+                }
+                else
+                {
+                    this.textBox.Text += "No Log data\r\n";
+                }
+
+                if (pwrList.Count > 0)
+                {
+                    foreach (var power in pwrList)
+                    {
+                        TimeSpan ts = TimeSpan.FromMilliseconds(power.ElapsedTime);
+                        this.textBox.Text += String.Format("Time:{0:c}({1}), State:{2}", ts, power.ElapsedTime, power.State);
+                        this.textBox.Text += String.Format(", Hot tank temp:{0}, Cold tank temp:{1}, cool temp:{2}", power.THotTank, power.TColdTank, 0);
+                        this.textBox.Text += String.Format(", Return Actual:{0}, Return Forecasted:{1}, Valve return:{2}\r\n", power.TReturnActual, power.TReturnForecasted, power.TReturnValve);
+                        //this.textBox.Text += String.Format("Valves time:{0}, valvesRetPrev:{1}, valvesRetNew:{2}\r\n");
+                    }
+                }
+                else
+                {
+                    this.textBox.Text += "No Power data\r\n";
+                }
             }
             else
             {
-                this.fileName.Text = randomSettings;
+                this.textBox.Text += "No type selected\r\n";
             }
-            pickFileButton.Visibility = Visibility.Visible;
-            pickFileButton.Content = "Start";
         }
 
         private async void PickFile()
@@ -184,69 +326,21 @@ namespace DataHandlerTestApp
             if (file != null)
             {
                 // Save only path relative to User Pictures folder
-                filenamestr = file.Path.Substring(file.Path.IndexOf("Pictures") + ("Pictures").Length);
-                fileName.Text = filenamestr;
-                router = new AOURouter(AOURouter.RunType.File, fileName.Text);
+                string fileNameStr = file.Path.Substring(file.Path.IndexOf("Pictures") + ("Pictures").Length);
+                dataSettings.Text = "Pictures," + fileNameStr;
             }
         }
 
-        private void PickFileButton_Click(object sender, RoutedEventArgs e)
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            if (comboBox.SelectedIndex == 0)
-                PickFile();
-            else if (comboBox.SelectedIndex == 1 && pickFileButton.Content == "Start")
-                StartSerialData();
-            else if (comboBox.SelectedIndex == 1)
-                StopSerialData();
-            else if (comboBox.SelectedIndex == 2 && pickFileButton.Content == "Start")
-                StartRandomData();
-            else if (comboBox.SelectedIndex == 2)
-                StopRandomData();
+            textBox.Text = "";
         }
 
-        private string GetNewRandomText()
+        private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
-            string text = "";
-
-            return text;
-        }
-
-        private void TestLoadedFile()
-        {
-            pickFileButton.Visibility = Visibility.Visible;
-            if (filenamestr.Length == 0)
-            {
-                PickFile();
-            }
-            else
-            {
-                TestLogAndPowerLists();
-            }
-        }
-
-        private void CreateFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
-        }
-
-        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            switch (comboBox.SelectedIndex)
-            {
-                case 0: TestLoadedFile(); break;
-                case 1: InitSerialCom(); break;
-                case 2: InitRandomData();  break;
-            }
-        }
-
-        private void TestButton_Click(object sender, RoutedEventArgs e)
-        {
-            switch (comboBox.SelectedIndex)
-            {
-                case 0: TestLoadedFile(); break;
-                case 1: TestSerialData(); break;
-                case 2: TestRandomData(); break;
-            }
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.SetText(textBox.Text);
+            Clipboard.SetContent(dataPackage);
         }
     }
 }

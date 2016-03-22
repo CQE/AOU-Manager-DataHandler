@@ -73,8 +73,6 @@ namespace DataHandler
         {
             AOUTemperatureData tempData; // = new AOUModels.AOUTemperatureData();
 
-            tempData.AOUTempDataHeader = AOUTypes.AOUTempDataId;
-
             AOUTypes.TimeMsToAOUModelTime(time, out tempData.time_min_of_week, out tempData.time_ms_of_min);
 
             tempData.coldTankTemp = RealToWordX100(ValueGenerator.GetTColdTankValue());
@@ -85,46 +83,42 @@ namespace DataHandler
             return tempData;
         }
 
-        static public AOUFeedData GetRandomFeedData(long time, AOUTypes.FeedType feedType)
+        static public AOUHotFeedData GetRandomHotFeedData(long time)
         {
-            AOUFeedData feedData; // = new AOUModels.AOUTemperatureData();
-
+            AOUHotFeedData feedData; // = new AOUModels.AOUTemperatureData();
             AOUTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
-
-            if (feedType == AOUTypes.FeedType.Cold)
-            {
-                feedData.AOUFeedDataHeader = AOUTypes.AOUColdLevelDataId;
-                feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
-                feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
-            }
-            else
-            {
-                feedData.AOUFeedDataHeader = AOUTypes.AOUHotLevelDataId;
-                feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
-                feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
-            }
+            feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+            feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
 
             return feedData;
         }
 
-        static public AOULevelData GetRandomLevelData(long time, AOUTypes.FeedType feedType)
+        static public AOUColdFeedData GetRandomColdFeedData(long time)
         {
-            AOULevelData levelData; // = new AOUModels.AOUTemperatureData();
+            AOUColdFeedData feedData; // = new AOUModels.AOUTemperatureData();
+            AOUTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
+            feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+            feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
 
+            return feedData;
+        }
+
+        static public AOUHotLevelData GetRandomHotLevelData(long time)
+        {
+            AOUHotLevelData levelData; // = new AOUModels.AOUTemperatureData();
             AOUTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
+            levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
+            levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
 
-            if (feedType == AOUTypes.FeedType.Cold)
-            {
-                levelData.AOULevelDataHeader = AOUTypes.AOUColdLevelDataId;
-                levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
-                levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
-            }
-            else
-            {
-                levelData.AOULevelDataHeader = AOUTypes.AOUHotLevelDataId;
-                levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
-                levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
-            }
+            return levelData;
+        }
+
+        static public AOUColdLevelData GetRandomColdLevelData(long time)
+        {
+            AOUColdLevelData levelData; // = new AOUModels.AOUTemperatureData();
+            AOUTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
+            levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
+            levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
 
             return levelData;
         }
@@ -132,8 +126,6 @@ namespace DataHandler
         static public AOUValvesData GetRandomValvesData(long time)
         {
             AOUValvesData valvesData; // = new AOUModels.AOUTemperatureData();
-            valvesData.AOUValvesDataHeader = AOUTypes.AOUValvesDataId;
-
             AOUTypes.TimeMsToAOUModelTime(time, out valvesData.time_min_of_week, out valvesData.time_ms_of_min);
 
             valvesData.newValveReturnTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
@@ -145,8 +137,6 @@ namespace DataHandler
         static public AOUSeqData GetRandomSeqData(long time, AOUTypes.StateType state)
         {
             AOUSeqData seqData;
-            seqData.AOUSeqDataHeader = AOUTypes.AOUSeqDataId;
-
             AOUTypes.TimeMsToAOUModelTime(time, out seqData.time_min_of_week, out seqData.time_ms_of_min);
 
             seqData.state = (UInt16)state;
@@ -158,7 +148,6 @@ namespace DataHandler
         static public AOUIMMData GetRandomIMMData(long time, AOUTypes.IMMSettings setting)
         {
             AOUIMMData immData;
-            immData.AOUIMMDataHeader = AOUTypes.AOUIMMDataId;
 
             AOUTypes.TimeMsToAOUModelTime(time, out immData.time_min_of_week, out immData.time_ms_of_min);
 
@@ -239,25 +228,26 @@ namespace DataHandler
         }
 
         /***********************************/
-        static public Power GetRandomPower()
+
+
+        static public long GetElapsedTime(double minResolution)
         {
-
             if (ts_start == -1)
-                ts_start = DateTime.Now.Ticks;
+                ts_start = DateTime.Now.Ticks; // First time
 
-            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start);
-            int tsSeconds = ts.Hours * 60 * 60 + ts.Minutes * 60 + ts.Seconds;
-            // Todo tsDay - or add day
+            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start); // Diff ticks
 
+            return (long)(Math.Round(ts.TotalMilliseconds/minResolution) * minResolution);
+        }
+
+        static public Power GetRandomPower(double minResolution)
+        {
             AOUTypes.StateType valState = (AOUTypes.StateType)rnd.Next(1, AOUTypes.NumStates + 1);
 
             var power = new Power()
             {
-                // To milliseconds
-                ElapsedTime = ts.Milliseconds + tsSeconds * 1000,
-
+                ElapsedTime = GetElapsedTime(minResolution),
                 State = valState, 
-
                 THotTank = GetTHotTankValue(),
                 TColdTank = GetTColdTankValue(),
                 TReturnValve = GetTReturnValveValue(),
@@ -278,9 +268,9 @@ namespace DataHandler
             return power;
         }
 
-        static public AOULogMessage GetRandomLogMsg()
+        static public AOULogMessage GetRandomLogMsg(double minResolution)
         {
-            uint ts = (uint)((ulong)DateTime.Now.Ticks / (ulong)10000); // 100 ns to s
+            long ts = GetElapsedTime(minResolution);
             uint prio = (uint)rnd.Next(1, 3);
             uint pid = (uint)rnd.Next(1038, 1965);
             string logtext = "log-" + GetRandomString(10);

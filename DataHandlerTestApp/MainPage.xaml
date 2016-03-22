@@ -14,10 +14,15 @@
                 <Button x:Name="TestLoadedFileButton" Content="Test loaded file" Margin="5,0,0,0" Height="30" Click="TestLoadedFileButton_Click"/>
                 <Button x:Name="TestRandomDataButton" Content="Test random data" Margin="5,0,0,0" Height="30" Click="TestRandomDataButton_Click"/ -->
                 <ComboBox x:Name="comboBox" Margin="130,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="140" SelectionChanged="comboBox_SelectionChanged"/>
-                <Button x:Name="testButton" Content="Test" Margin="4,0,0,0"  Height="30" Click="TestButton_Click"/>
-                <Button x:Name="CreateFileButton" Content="Create random data" Margin="10,0,0,0" Height="30" Click="CreateFileButton_Click"/>
-                <TextBox x:Name="fileName" Margin="20,0,0,0" TextWrapping="Wrap" Text="" Width="425" Height="30" ToolTipService.ToolTip="Relative to Image Folder"/>
-                <Button x:Name="pickFileButton" Content="Pick" Margin="4,0,0,0"  Height="30" Click="PickFileButton_Click"/>
+                <TextBlock Text="Streaming" Margin="15,0,0,0"/>
+                <ToggleSwitch x:Name="StreamingMode" IsOn="True" IsEnabled="True" Margin="2,0,0,0"/>
+                <Button x:Name="StartStopButton" Content="Test" Margin="2,0,0,0"  Height="30" Click="StartStopButton_Click"/>
+                <Button x:Name="XMLButton" Content="XML" Margin="2,0,0,0" Height="30" Click="XMLButton_Click"/>
+                <Button x:Name="TextButton" Content="Text" Margin="2,0,0,0" Height="30" Click="TextButton_Click"/>
+                <TextBox x:Name="dataSettings" Margin="10,0,0,0" TextWrapping="Wrap" Text="" Width="425" Height="30" ToolTipService.ToolTip="Relative to Image Folder"/>
+                <Button x:Name="pickFileButton" Content="Pick" Margin="2,0,0,0"  Height="30" Click="PickFileButton_Click"/>
+                <Button x:Name="cpyButton" Content="Copy" Margin="22,0,0,0"  Height="30" Click="CopyButton_Click"/>
+                <Button x:Name="clrButton" Content="Clear" Margin="2,0,0,0"  Height="30" Click="ClearButton_Click"/>
             </StackPanel>
             <ScrollViewer >
             <TextBox x:Name="textBox" Margin="5,5,5,5" TextWrapping="Wrap" Height="800" Text=""/>
