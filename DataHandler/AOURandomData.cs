@@ -8,8 +8,6 @@ namespace DataHandler
 {
     public class AOURandomData:AOUData
     {
-        public const int MaxRandomCount = 50;
-
         private double time_res;
 
         public AOURandomData(AOUSettings.RandomSetting rndSettings) : base()
