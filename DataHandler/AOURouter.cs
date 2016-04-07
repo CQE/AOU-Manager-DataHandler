@@ -155,13 +155,15 @@ namespace DataHandler
 
             if (aouData.AreNewLogMessagesAvailable())
             {
+                int maxTotalLogsInMemory = 100;
                 var logs = aouData.GetNewLogMessages();
                 logMessages.AddRange(logs);
                 AddLogToFile(logs);
-                if (logMessages.Count > MaxTotalValuesInMemory)
+                if (logMessages.Count > maxTotalLogsInMemory)
                 {
-                    logMessages.RemoveRange(0, logMessages.Count - MaxTotalValuesInMemory);
+                    logMessages.RemoveRange(0, logMessages.Count - maxTotalLogsInMemory);
                 }
+               
             }
 
 

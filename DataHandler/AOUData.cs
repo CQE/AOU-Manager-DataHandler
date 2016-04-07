@@ -81,8 +81,11 @@ namespace DataHandler
 
         public virtual bool AreNewValuesAvailable()
         {
-
-            return newPowerValues.Count > 0;
+            if (newPowerValues.Count > 0)
+            {
+                return true;
+            }
+            return false;
         }
 
         public virtual Power[] GetNewValues()
@@ -123,6 +126,8 @@ namespace DataHandler
         {
             long time_ms = 0;
             string logMsg = "";
+
+            AOUStateData stateData;
 
             AOUSeqData seqData;
             AOUTemperatureData tempData;
@@ -180,6 +185,20 @@ namespace DataHandler
                         tempPower.TColdTank = tempData.coldTankTemp;
                         tempPower.TReturnActual = tempData.retTemp;
                         tempPower.ValveCoolant = tempData.coolerTemp;
+                    }
+                }
+                else if (nextTag == AOUInputParser.tagState)
+                {
+                    if (AOUInputParser.ParseState(tagContent, out stateData))
+                    {
+                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(stateData.time_min_of_week, stateData.time_ms_of_min)*1000;
+                        tempPower.THotTank = stateData.hotTankTemp;
+                        tempPower.TColdTank = stateData.coldTankTemp;
+                        tempPower.TReturnActual = stateData.retTemp;
+                        tempPower.ValveCoolant = stateData.coolerTemp;
+                        tempPower.TBufferCold = stateData.bufCold;
+                        tempPower.TBufferMid = stateData.bufMid;
+                        tempPower.TBufferHot = stateData.bufHot;
                     }
                 }
                 else if (nextTag == AOUInputParser.tagSequence)
@@ -264,13 +283,16 @@ namespace DataHandler
                     newLogMessages.Add(new AOULogMessage(AOUHelper.GetNowToMs(), "Unknown:" + tagContent, 0, 0));
                 }
 
-                if (AOUInputParser.ValidPowerTag(nextTag) && AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan) > 0)
+                // long curtimeStep = AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan);
+                if (AOUInputParser.ValidPowerTag(nextTag))
                 {
                     // tempPower.ElapsedTime = testTime;
                     // testTime += 1000;
-                    long time = AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan);
-                    tempPower.ElapsedTime = time;
-                    if (maxTime == 0 || time > maxTime)
+                    // long time = AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan);
+                    // tempPower.ElapsedTime = curtimeStep;
+                    newPowerValues.Add(tempPower);
+                    /*
+                    if (maxTime == 0 || curtimeStep > maxTime)
                     {
                         newPowerValues.Add(tempPower);
                     }
@@ -323,6 +345,7 @@ namespace DataHandler
 
                     if (tempPower.ElapsedTime > maxTime)
                         maxTime = tempPower.ElapsedTime;
+                        */
                 }
                 if (count == 0) // No more valid tags. Wait for more data
                 {

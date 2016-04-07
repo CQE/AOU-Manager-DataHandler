@@ -14,6 +14,15 @@ namespace DataHandler
         #region Tag Constants
         public const string tagSubTagTime = "Time"; //
 
+        /* <state><Time>19</Time><temp><Heat>34</Heat><Hot>31</Hot><Ret>27</Ret>
+<BuHot>30</BuHot><BuMid>29</BuMid><BuCold>27</BuCold>
+*/
+        public const string tagState = "state";
+        public const string tagTemp = "temp";
+        public const string tagTempBuHot = "BuHot";
+        public const string tagTempBuMid = "BuMid";
+        public const string tagTempBuCold = "BuCold";
+
         public const string tagTemperature = "temperature";
         public const string tagTempSubTagHot = "Hot";
         public const string tagTempSubTagCold = "Cold";
@@ -60,7 +69,10 @@ namespace DataHandler
         public static bool ValidPowerTag(string tag)
         {
             if (tag == tagTemperature || tag == tagFeeds || tag == tagSequence ||
-                tag == tagLevels || tag == tagValves)
+                tag == tagLevels || tag == tagValves || tag == tagValves ||
+                tag == tagState ||
+                tag == tagTemp || tag == tagTempBuHot || tag == tagTempBuMid || tag == tagTempBuCold
+                )
             {
                 return true;
             }
@@ -394,6 +406,60 @@ namespace DataHandler
                 }
             }
             return logs;
+        }
+
+
+        public static bool ParseState(string tagText, out AOUStateData stateData)
+        {
+            /* <state><Time>19</Time><temp><Heat>34</Heat><Hot>31</Hot><Ret>27</Ret>
+            <BuHot>30</BuHot><BuMid>29</BuMid><BuCold>27</BuCold>
+            <Cool>32</Cool><Cold>30</Cold><BearHot>0</BearHot>
+            <ch9>0</ch9><ch10>0</ch10><ch11>0</ch11><ch12>0</ch12><ch13>0</ch13><ch14>0</ch14><ch15>0</ch15><avg>28</avg></temp>
+
+            1. ASCII format from AOU
+            Tagged telegram format. All sub tag pairs except “Time” are optional.
+ 
+            <state><Time>104898416</Time>  // Number of 1/10 second ticks since RESET (32bits unsigned)
+               <temp>  // 16bits signed
+            <Heat>120</Heat><Hot>122</Hot><Ret>68</Ret><BuHot>56</BuHot><BuMid>56</BuMid><BuCold>56</BuCold><Cool>40</Cool><Cold>56</Cold><BearHot>40</BearHot>
+               </temp>
+               <Pow>127</Pow> // 8bits unsigned
+               <Valves>MMSS</Valves>     // 2 hex digits MASK (e.g. “3F”), and 2 hex digits STATE (e.g. “12”). Bits: 0/Hot valve, 1/Cold valve, 2/Return valve
+               <Energy>MMSS</Energy>    // 2 hex digits MASK (e.g. “3F”), and 2 hex digits STATE (e.g. “12”).
+               <UI>MMSS</UI>                   // 2 hex digits MASK (e.g. “3F”), and 2 hex digits STATE (e.g. “12”).
+               <IMM>MMSS</IMM>          // 2 hex digits MASK (e.g. “3F”), and 2 hex digits STATE (e.g. “12”).
+               <Mode>MMSS</Mode>      // 2 hex digits MASK (e.g. “3F”), and 2 hex digits STATE (e.g. “12”).
+               <Seq>117</Seq>
+            </state>
+ 
+            Example using this spec:
+            <state><Time>4711</Time>
+               <Valves>0101</Valves>      // Hot feed valve “on” (i.e. feeds hot tempering fluid)
+            </state>
+ 
+            <state><Time>4721</Time>  // One second (or 10 x 1/10 second) later
+               <Valves>0100</Valves>       // Hot feed valve “off” (i.e. stopped feeding hot tempering fluid)
+            </state>
+            */
+            stateData.time_min_of_week = 0;
+            stateData.time_ms_of_min = 0;
+            stateData.coldTankTemp = AOUTypes.UInt16_NaN;
+            stateData.hotTankTemp = AOUTypes.UInt16_NaN;
+            stateData.retTemp = AOUTypes.UInt16_NaN;
+            stateData.coolerTemp = AOUTypes.UInt16_NaN;
+            stateData.bufCold = AOUTypes.UInt16_NaN;
+            stateData.bufMid = AOUTypes.UInt16_NaN;
+            stateData.bufHot = AOUTypes.UInt16_NaN;
+
+            return ParseWordTime(tagText, out stateData.time_min_of_week, out stateData.time_ms_of_min) &&
+                    ParseWord(tagTempSubTagHot, tagText, out stateData.hotTankTemp) &&
+                    ParseWord(tagTempSubTagCold, tagText, out stateData.coldTankTemp) &&
+                    ParseWord(tagTempSubTagRet, tagText, out stateData.retTemp) &&
+                    ParseWord(tagTempSubTagCool, tagText, out stateData.coolerTemp) &&
+                    ParseWord(tagTempBuCold, tagText, out stateData.bufCold) &&
+                    ParseWord(tagTempBuMid, tagText, out stateData.bufMid) &&
+                    ParseWord(tagTempBuHot, tagText, out stateData.bufHot);
+
         }
 
         public static bool ParseTemperature(string tagText, out AOUTemperatureData tempData)
