@@ -11,7 +11,7 @@ namespace DataHandler
         private TextFile dataFile;
         private AOUSettings.FileSetting setting;
 
-        public AOUFileData(AOUSettings.FileSetting fileSetting) : base()
+        public AOUFileData(AOUSettings.FileSetting fileSetting, AOUSettings.DebugMode mode = AOUSettings.DebugMode.noDebug) : base(mode)
         {
             setting = fileSetting;
             dataFile = new TextFile();

@@ -13,9 +13,8 @@
                 <!-- Button x:Name="TestSerialComButton" Content="Test Serial Com" Margin="125,0,0,0" Height="30" Click="TestSerialComButton_Click"/>
                 <Button x:Name="TestLoadedFileButton" Content="Test loaded file" Margin="5,0,0,0" Height="30" Click="TestLoadedFileButton_Click"/>
                 <Button x:Name="TestRandomDataButton" Content="Test random data" Margin="5,0,0,0" Height="30" Click="TestRandomDataButton_Click"/ -->
-                <ComboBox x:Name="comboBox" Margin="130,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="140" SelectionChanged="comboBox_SelectionChanged"/>
-                <TextBlock Text="Streaming" Margin="15,0,0,0"/>
-                <ToggleSwitch x:Name="StreamingMode" IsOn="True" IsEnabled="True" Margin="2,0,0,0"/>
+                <ComboBox x:Name="comboBoxDataSource" Margin="130,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="140" SelectionChanged="comboBoxDataSource_SelectionChanged"/>
+                <ComboBox x:Name="comboBoxStreaming" Margin="2,0,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="140" SelectionChanged="comboBoxStreaming_SelectionChanged"/>
                 <Button x:Name="StartStopButton" Content="Test" Margin="2,0,0,0"  Height="30" Click="StartStopButton_Click"/>
                 <Button x:Name="XMLButton" Content="XML" Margin="2,0,0,0" Height="30" Click="XMLButton_Click"/>
                 <Button x:Name="TextButton" Content="Text" Margin="2,0,0,0" Height="30" Click="TextButton_Click"/>

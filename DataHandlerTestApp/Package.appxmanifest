@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="DataHandlerTestApp" Publisher="CN=Benurme" Version="1.0.0.0" />
+  <Identity Name="DataHandlerTestApp" Publisher="CN=Benurme" Version="1.0.7.0" />
   <mp:PhoneIdentity PhoneProductId="412a00c1-5a9c-4f19-806a-0cdacff50fa6" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>DataHandlerTestApp</DisplayName>
@@ -28,9 +28,9 @@
     <uap:Capability Name="picturesLibrary" />
     <DeviceCapability Name="bluetooth" />
     <DeviceCapability Name="serialcommunication">
-	  <Device Id="any">
-	    <Function Type="name:serialPort" />
-	  </Device>
-    </DeviceCapability>	
+      <Device Id="any">
+        <Function Type="name:serialPort" />
+      </Device>
+    </DeviceCapability>
   </Capabilities>
 </Package>

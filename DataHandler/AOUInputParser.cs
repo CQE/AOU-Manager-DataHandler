@@ -14,20 +14,28 @@ namespace DataHandler
         #region Tag Constants
         public const string tagSubTagTime = "Time"; //
 
-        /* <state><Time>19</Time><temp><Heat>34</Heat><Hot>31</Hot><Ret>27</Ret>
-<BuHot>30</BuHot><BuMid>29</BuMid><BuCold>27</BuCold>
-*/
+
         public const string tagState = "state";
         public const string tagTemp = "temp";
         public const string tagTempBuHot = "BuHot";
         public const string tagTempBuMid = "BuMid";
         public const string tagTempBuCold = "BuCold";
-
-        public const string tagTemperature = "temperature";
         public const string tagTempSubTagHot = "Hot";
         public const string tagTempSubTagCold = "Cold";
         public const string tagTempSubTagRet = "Ret";
         public const string tagTempSubTagCool = "Cool";
+        public const string tagTempSubTagBearHot = "BearHot";
+
+        public const string tagPower = "Pow";
+        public const string tagValves = "Valves";
+        public const string tagEnergy = "Energy";
+        public const string tagUI = "UI";
+        public const string tagIMM = "IMM";
+        public const string tagMode = "Mode";
+        public const string tagSequenceNumber = "Seq";
+
+        /* old tags */
+        public const string tagTemperature = "temperature";
         public const string tagTempSubTagSpare1 = "Spare1";
 
         public const string tagFeeds = "feeds";
@@ -42,12 +50,12 @@ namespace DataHandler
         public const string tagSeqSubTagDesc = "Descr";
         public const string tagSeqSubTagLeave = "Leave";
 
-        public const string tagValves = "valves";
+        public const string tagValvesOld = "valves";
         public const string tagValvesSubTagRet = "Ret";
         public const string tagValvesSubTagRetPrev = "Prev";
         public const string tagValvesSubTagRetNew = "New";
 
-        public const string tagIMM = "imm";
+        public const string tagIMMOld = "imm";
         public const string tagIMMSubTagSetIMMError = "SetIMMError";
         public const string tagIMMSubTagIMMBlockInject = "SetIMMBlockInject";
         public const string tagIMMSubTagIMMBlockOpen = "SetIMMBlockOpen";
@@ -70,8 +78,8 @@ namespace DataHandler
         {
             if (tag == tagTemperature || tag == tagFeeds || tag == tagSequence ||
                 tag == tagLevels || tag == tagValves || tag == tagValves ||
-                tag == tagState ||
-                tag == tagTemp || tag == tagTempBuHot || tag == tagTempBuMid || tag == tagTempBuCold
+
+                tag == tagState // Last tag to have all Data
                 )
             {
                 return true;
@@ -377,6 +385,22 @@ namespace DataHandler
             }
         }
 
+        public static bool ParseWordTime10(string textline, out UInt16 time_hours, out UInt16 time_dec_sek)
+        {
+            long time_ms = 0;
+            if (ParseLong(tagSubTagTime, textline, out time_ms))
+            {
+                AOUTypes.TimeDecSecToAOUModelTime(time_ms, out time_hours, out time_dec_sek);
+                return true;
+            }
+            else
+            {
+                time_dec_sek = 0;
+                time_hours = 0;
+                return false;
+            }
+        }
+
         public static bool ParseLongTime(string textline, out long time_ms) // Not to be misunderstood
         {
             return ParseLong(tagSubTagTime, textline, out time_ms);
@@ -409,11 +433,13 @@ namespace DataHandler
         }
 
 
+        // New 
         public static bool ParseState(string tagText, out AOUStateData stateData)
         {
             /* <state><Time>19</Time><temp><Heat>34</Heat><Hot>31</Hot><Ret>27</Ret>
             <BuHot>30</BuHot><BuMid>29</BuMid><BuCold>27</BuCold>
             <Cool>32</Cool><Cold>30</Cold><BearHot>0</BearHot>
+
             <ch9>0</ch9><ch10>0</ch10><ch11>0</ch11><ch12>0</ch12><ch13>0</ch13><ch14>0</ch14><ch15>0</ch15><avg>28</avg></temp>
 
             1. ASCII format from AOU
@@ -450,16 +476,27 @@ namespace DataHandler
             stateData.bufCold = AOUTypes.UInt16_NaN;
             stateData.bufMid = AOUTypes.UInt16_NaN;
             stateData.bufHot = AOUTypes.UInt16_NaN;
+            UInt16 todoValue = AOUTypes.UInt16_NaN;
 
-            return ParseWordTime(tagText, out stateData.time_min_of_week, out stateData.time_ms_of_min) &&
-                    ParseWord(tagTempSubTagHot, tagText, out stateData.hotTankTemp) &&
-                    ParseWord(tagTempSubTagCold, tagText, out stateData.coldTankTemp) &&
-                    ParseWord(tagTempSubTagRet, tagText, out stateData.retTemp) &&
-                    ParseWord(tagTempSubTagCool, tagText, out stateData.coolerTemp) &&
-                    ParseWord(tagTempBuCold, tagText, out stateData.bufCold) &&
-                    ParseWord(tagTempBuMid, tagText, out stateData.bufMid) &&
-                    ParseWord(tagTempBuHot, tagText, out stateData.bufHot);
+            ParseWordTime10(tagText, out stateData.time_min_of_week, out stateData.time_ms_of_min);
+            ParseWord(tagTempSubTagHot, tagText, out stateData.hotTankTemp);
+            ParseWord(tagTempSubTagCold, tagText, out stateData.coldTankTemp);
+            ParseWord(tagTempSubTagRet, tagText, out stateData.retTemp);
+            ParseWord(tagTempSubTagCool, tagText, out stateData.coolerTemp);
+            ParseWord(tagTempBuCold, tagText, out stateData.bufCold);
+            ParseWord(tagTempBuMid, tagText, out stateData.bufMid);
+            ParseWord(tagTempBuHot, tagText, out stateData.bufHot);
+            ParseWord(tagTempSubTagBearHot, tagText, out todoValue);
+            ParseWord(tagPower, tagText, out todoValue);
+            ParseWord(tagValves, tagText, out todoValue);
+            ParseWord(tagEnergy, tagText, out todoValue);
+            ParseWord(tagUI, tagText, out todoValue);
+            ParseWord(tagIMM, tagText, out todoValue);
+            ParseWord(tagMode, tagText, out todoValue);
+            ParseWord(tagSequenceNumber, tagText, out todoValue);
 
+
+            return true;
         }
 
         public static bool ParseTemperature(string tagText, out AOUTemperatureData tempData)

@@ -9,6 +9,11 @@ namespace DataHandler
     public class AOUSettings
     {
 
+        public enum DebugMode
+        {
+            noDebug, rawData // Possible to define more debug modes like log to file....
+        }
+
         public struct RemoteSetting
         {
             public string Remote;

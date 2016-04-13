@@ -10,7 +10,7 @@ namespace DataHandler
     {
         private double time_res;
 
-        public AOURandomData(AOUSettings.RandomSetting rndSettings) : base()
+        public AOURandomData(AOUSettings.RandomSetting rndSettings, AOUSettings.DebugMode dbgMode = AOUSettings.DebugMode.noDebug) : base(dbgMode)
         {
             AddDataLogText("Random Data Ready - num values:" + rndSettings.NumValues + ", ms between:" + rndSettings.MsBetween);
             time_res = rndSettings.MsBetween;
@@ -19,6 +19,7 @@ namespace DataHandler
 
         public override bool SendData(string data)
         {
+            newLogMessages.Add(new AOULogMessage(0, "Send Data:" + data)); // ToDo Time
             return true;
         }
 
@@ -31,6 +32,10 @@ namespace DataHandler
             newPowerValues.Add(ValueGenerator.GetRandomPower(time_res));
         }
 
+        protected override string GetTextData()
+        {
+            return "."; // Todo Nothing. Only Raw Data
+        }
 
         #region private static methods
         private static string CreateRandomTempXmlString(long time)

@@ -13,7 +13,7 @@ namespace DataHandler
         private string receivedText = "";
 
 
-        public AOURemoteData(AOUSettings.RemoteSetting remoteSetting) : base()
+        public AOURemoteData(AOUSettings.RemoteSetting remoteSetting, AOUSettings.DebugMode dbgMode = AOUSettings.DebugMode.noDebug) : base(dbgMode)
         {
             setting = remoteSetting;
         }

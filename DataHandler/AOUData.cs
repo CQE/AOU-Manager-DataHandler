@@ -16,19 +16,51 @@ namespace DataHandler
 
         private double curTimeSpan = 1000; // 1 sek between 
 
-        long minTime = long.MaxValue;
-        long maxTime = 0;
-
         public bool Connected { get; protected set; }
 
-        protected AOUData()
+        protected AOUSettings.DebugMode debugMode;
+
+        // protected string rawData = "";
+
+        protected AOUData(AOUSettings.DebugMode dbgMode)
         {
             Connected = false;
+            debugMode = dbgMode;
 
             newLogMessages = new List<AOULogMessage>();
             newPowerValues = new List<Power>();
         }
 
+        /* Virtual functions */
+        public virtual void Connect()
+        {
+            Connected = true;
+        }
+
+        public virtual void Disconnect()
+        {
+            Connected = false;
+        }
+
+        protected virtual string GetTextData()
+        {
+            throw new Exception("AOUData.GetTextData Not overrided");
+        }
+
+        public virtual bool SendData(string data)
+        {
+            throw new Exception("AOUData.SendData Not overrided");
+        }
+
+        public virtual void UpdateData()
+        {
+            /*
+            Update newLogMessages and newPowerValues
+            */
+            throw new Exception("AOUData.UpdateData Not overrided");
+        }
+
+        /* Protected methods */
         protected void AddDataLogText(string text)
         {
             if (dataLogStr.Length > 0)
@@ -43,6 +75,7 @@ namespace DataHandler
             dataErrStr += text;
         }
 
+        /* Public methods */
         public bool HaveErrors()
         {
             return dataErrStr.Length > 0;
@@ -69,17 +102,7 @@ namespace DataHandler
             return text;
         }
 
-        public virtual void Connect()
-        {
-            Connected = true;
-        }
-
-        public virtual void Disconnect()
-        {
-            Connected = false;
-        }
-
-        public virtual bool AreNewValuesAvailable()
+       public bool AreNewValuesAvailable()
         {
             if (newPowerValues.Count > 0)
             {
@@ -88,14 +111,14 @@ namespace DataHandler
             return false;
         }
 
-        public virtual Power[] GetNewValues()
+        public Power[] GetNewValues()
         {
             Power[] powers = newPowerValues.ToArray();
             newPowerValues.Clear();
             return powers;
         }
 
-        public virtual bool AreNewLogMessagesAvailable()
+        public bool AreNewLogMessagesAvailable()
         {
             return newLogMessages.Count > 0;
         }
@@ -107,25 +130,22 @@ namespace DataHandler
             return logs;
         }
 
-        protected virtual string GetTextData()
-        {
-            throw new Exception("AOUData.GetTextData Not overrided");
-        }
+        // dbgMode
 
-        public virtual bool SendData(string data)
+        public string GetRawData()
         {
-            throw new Exception("AOUData.SendData Not overrided");
-        }
-
-        public virtual void UpdateData()
-        {
-            throw new Exception("AOUData.UpdateData Not overrided");
+            return GetTextData();
         }
 
         protected void GetTextDataList()
         {
             long time_ms = 0;
             string logMsg = "";
+
+            if (this.debugMode == AOUSettings.DebugMode.rawData)
+            {
+                return;
+            }
 
             AOUStateData stateData;
 
@@ -189,17 +209,15 @@ namespace DataHandler
                 }
                 else if (nextTag == AOUInputParser.tagState)
                 {
-                    if (AOUInputParser.ParseState(tagContent, out stateData))
-                    {
-                        tempPower.ElapsedTime = AOUTypes.AOUModelTimeToTimeMs(stateData.time_min_of_week, stateData.time_ms_of_min)*1000;
-                        tempPower.THotTank = stateData.hotTankTemp;
-                        tempPower.TColdTank = stateData.coldTankTemp;
-                        tempPower.TReturnActual = stateData.retTemp;
-                        tempPower.ValveCoolant = stateData.coolerTemp;
-                        tempPower.TBufferCold = stateData.bufCold;
-                        tempPower.TBufferMid = stateData.bufMid;
-                        tempPower.TBufferHot = stateData.bufHot;
-                    }
+                    AOUInputParser.ParseState(tagContent, out stateData);
+                    tempPower.ElapsedTime = AOUTypes.AOUModelTimeDecSecToTimeMs(stateData.time_min_of_week, stateData.time_ms_of_min);
+                    tempPower.THotTank = stateData.hotTankTemp;
+                    tempPower.TColdTank = stateData.coldTankTemp;
+                    tempPower.TReturnActual = stateData.retTemp;
+                    tempPower.ValveCoolant = stateData.coolerTemp;
+                    tempPower.TBufferCold = stateData.bufCold;
+                    tempPower.TBufferMid = stateData.bufMid;
+                    tempPower.TBufferHot = stateData.bufHot;
                 }
                 else if (nextTag == AOUInputParser.tagSequence)
                 {
@@ -286,66 +304,7 @@ namespace DataHandler
                 // long curtimeStep = AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan);
                 if (AOUInputParser.ValidPowerTag(nextTag))
                 {
-                    // tempPower.ElapsedTime = testTime;
-                    // testTime += 1000;
-                    // long time = AOUHelper.ToCurTimeStep(tempPower.ElapsedTime, curTimeSpan);
-                    // tempPower.ElapsedTime = curtimeStep;
                     newPowerValues.Add(tempPower);
-                    /*
-                    if (maxTime == 0 || curtimeStep > maxTime)
-                    {
-                        newPowerValues.Add(tempPower);
-                    }
-                    else if (tempPower.ElapsedTime < minTime)
-                    {
-                        newPowerValues.Insert(0, tempPower);
-                    }
-                    else {
-                        for (int i = 0; i < newPowerValues.Count; i++)
-                        {
-                            if (newPowerValues[i].ElapsedTime == tempPower.ElapsedTime)
-                            {
-                                Power pwr = newPowerValues[i];
-                                if (pwr.State == AOUTypes.StateType.NOTHING) pwr.State = tempPower.State;
-                                if (double.IsNaN(pwr.TColdTank)) pwr.TColdTank = tempPower.TColdTank;
-                                if (double.IsNaN(pwr.THotTank)) pwr.THotTank = tempPower.THotTank;
-                                if (double.IsNaN(pwr.TReturnActual)) pwr.TReturnActual = tempPower.TReturnActual;
-                                if (double.IsNaN(pwr.TReturnForecasted)) pwr.TReturnForecasted = tempPower.TReturnForecasted;
-                                if (double.IsNaN(pwr.TReturnValve)) pwr.TReturnValve = tempPower.TReturnValve;
-                                if (double.IsNaN(pwr.TBufferCold)) pwr.TBufferCold = tempPower.TBufferCold;
-                                if (double.IsNaN(pwr.TBufferMid)) pwr.TBufferMid = tempPower.TBufferMid;
-                                if (double.IsNaN(pwr.TBufferHot)) pwr.TBufferHot = tempPower.TBufferHot;
-                                if (double.IsNaN(pwr.THeaterOilOut)) pwr.THeaterOilOut = tempPower.THeaterOilOut;
-                                if (double.IsNaN(pwr.THeatExchangerCoolantOut)) pwr.THeatExchangerCoolantOut = tempPower.THeatExchangerCoolantOut;
-
-                                if (pwr.PowerHeating == double.NaN) pwr.PowerHeating = tempPower.PowerHeating;
-
-                                if (pwr.ValveCoolant == double.NaN) pwr.ValveCoolant = tempPower.ValveCoolant;
-                                if (pwr.ValveFeedCold == double.NaN) pwr.ValveFeedCold = tempPower.ValveFeedCold;
-                                if (pwr.ValveFeedHot == double.NaN) pwr.ValveFeedHot = tempPower.ValveFeedHot;
-                                if (pwr.ValveReturn == double.NaN) pwr.ValveReturn = tempPower.ValveReturn;
-
-                                newPowerValues[i] = pwr;
-                                break;
-                            }
-                            else if (tempPower.ElapsedTime < newPowerValues[i].ElapsedTime)
-                            {
-                                newPowerValues.Insert(i, tempPower);
-                                break;
-                            }
-                            else if (i == (newPowerValues.Count - 1))
-                            {
-                                newLogMessages.Add(new AOULogMessage(AOUHelper.GetNowToMs(), "Power build error:" + i, 8, 0));
-                            }
-                        }
-                    }
-
-                    if (tempPower.ElapsedTime < minTime)
-                        minTime = tempPower.ElapsedTime;
-
-                    if (tempPower.ElapsedTime > maxTime)
-                        maxTime = tempPower.ElapsedTime;
-                        */
                 }
                 if (count == 0) // No more valid tags. Wait for more data
                 {

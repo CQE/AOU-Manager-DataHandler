@@ -23,7 +23,7 @@ namespace DataHandlerTestApp
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
-{ 
+{
     public sealed partial class MainPage : Page
     {
         AOURouter router;
@@ -34,10 +34,23 @@ namespace DataHandlerTestApp
         AOUSettings.FileSetting fileSetting;
         AOUSettings.RandomSetting randomSetting;
         AOUSettings.SerialSetting serialSetting;
+        AOUSettings.RemoteSetting remoteSetting;
 
         const string fileSettingStr = "pictures,";
         const string randomSettingStr = "30,1000";
-        const string serialSettingStr = "COM3,9600";
+        const string serialSettingStr = "COM5,115200";
+        const string remoteSettingStr = "Todo";
+
+        const string DataSourceFileStr = "File";
+        const string DataSourceSerialStr = "Serial";
+        const string DataSourceRandomStr = "Random";
+        const string DataSourceRemoteClientStr = "Remote Client";
+
+        const string StreamNothingStr = "No streaming";
+        const string StreamLogStr = "Log data stream";
+        const string StreamPowerStr = "Power data stream";
+        const string StreamBothStr = "Stream both Log and Power data";
+        const string StreamRealDataStr = "Real data stream";
 
         public MainPage()
         {
@@ -46,11 +59,18 @@ namespace DataHandlerTestApp
             fileSetting = TextToFileSetting(fileSettingStr);
             randomSetting = TextToRandomSetting(randomSettingStr);
             serialSetting = TextToSerialSetting(serialSettingStr);
+            remoteSetting = TextToRemoteSetting(remoteSettingStr);
 
-            comboBox.Items.Add("File");
-            comboBox.Items.Add("Serial");
-            comboBox.Items.Add("Random");
-            comboBox.Items.Add("Remote Client");
+            comboBoxDataSource.Items.Add(DataSourceFileStr);
+            comboBoxDataSource.Items.Add(DataSourceSerialStr);
+            comboBoxDataSource.Items.Add(DataSourceRandomStr);
+            comboBoxDataSource.Items.Add(DataSourceRemoteClientStr);
+
+            comboBoxStreaming.Items.Add(StreamNothingStr);
+            comboBoxStreaming.Items.Add(StreamLogStr);
+            comboBoxStreaming.Items.Add(StreamPowerStr);
+            comboBoxStreaming.Items.Add(StreamBothStr);
+            comboBoxStreaming.Items.Add(StreamRealDataStr);
 
             dTimerUpdateData = new DispatcherTimer();
             dTimerUpdateData.Tick += UpdateDataTick;
@@ -69,51 +89,123 @@ namespace DataHandlerTestApp
                 router.Update();
                 string log = router.GetLogStr();
                 if (log.Length > 0)
-                    textBox.Text += log + "\r\n"; //  if new router log messages
+                    textBox.Text += log + Environment.NewLine; //  if new router log messages
             }
         }
 
-        void UpdateTextTick(object sender, object e)
+        private void AddLogMessagesToTextBox()
         {
-            if (router != null)
+            if (router.NewLogMessagesAreAvailable())
             {
-                if (router.NewLogMessagesAreAvailable())
+                var logs = router.GetNewLogMessages();
+                foreach (var log in logs)
                 {
-                    var logs = router.GetNewLogMessages();
-                    foreach (var log in logs)
+                    textBox.Text += log.ToString() + Environment.NewLine;
+                }
+            }
+        }
+
+        private void AddPowerValuesToTextBox(bool onlyLast = true)
+        {
+            if (router.NewPowerDataIsAvailable())
+            {
+                if (onlyLast)
+                { 
+                    var power = router.GetLastNewPowerValue();
+                    textBox.Text += router.GetLastNewPowerValue().ToString() + Environment.NewLine;
+                }
+                else
+                {
+                    var powers = router.GetLastPowerValues(30);
+                    foreach (var power in powers)
                     {
-                        textBox.Text += log.ToString() + "\r\n"; // Show new AOU log messages
+                        textBox.Text += power.ToString() + Environment.NewLine;
                     }
                 }
-                if (StreamingMode.IsOn && router.NewPowerDataIsAvailable())
+            }
+        }
+
+
+        void UpdateTextTick(object sender, object e)
+        {
+            string errStr = "No valid streaming mode selected";
+            
+            if (router != null)
+            {
+                // Show new data in text box depending on selection
+                if (comboBoxStreaming.SelectedValue == null) 
                 {
-                    textBox.Text += router.GetLastNewPowerValue().ToString() + "\r\n"; // Show if new log messages
+                    if (!textBox.Text.Contains(errStr)) // No repeated messages
+                    {
+                        textBox.Text += errStr + Environment.NewLine; ;
+                    }
                 }
-                /**/
+                else
+                { 
+                    switch (comboBoxStreaming.SelectedValue.ToString())
+                    {
+                        case StreamNothingStr:
+                            if (textBox.Text.Contains("Stream Nothing")) // No repeated messages
+                            {
+                                textBox.Text += "Stream Nothing" + Environment.NewLine; ;
+                            }
+                            break; // No textBox.Text
+                        case StreamLogStr:
+                            AddLogMessagesToTextBox();
+                            break;
+                        case StreamPowerStr:
+                            AddPowerValuesToTextBox();
+                            break;
+                        case StreamBothStr:
+                            AddLogMessagesToTextBox();
+                            AddPowerValuesToTextBox();
+                            break;
+                        case StreamRealDataStr:
+                            textBox.Text += router.GetRawData();
+                            break;
+                        default:
+                            if (!textBox.Text.Contains(errStr)) // No repeated messages
+                            {
+                                textBox.Text += errStr + Environment.NewLine;
+                            }
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                if (!textBox.Text.Contains(errStr)) // No repeated messages
+                {
+                    textBox.Text += errStr + Environment.NewLine;
+                }
             }
         }
 
         private void PickFileButton_Click(object sender, RoutedEventArgs e)
         {
-            if (comboBox.SelectedIndex == 0) PickFile();
+            if (comboBoxDataSource.SelectedIndex == 0) PickFile();
         }
 
-        private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void comboBoxDataSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             dTimerUpdateText.Stop();
             TextButton.IsEnabled = false;
             XMLButton.IsEnabled = false;
-            switch (comboBox.SelectedIndex)
+            switch (comboBoxDataSource.SelectedIndex)
             {
-                case 0: InitFileInput(); break;
-                case 1: InitSerialCom();
+                case 0:
+                    InitFileInput();
                     break;
-                case 2: InitRandomData();
+                case 1:
+                    InitSerialCom();
+                    break;
+                case 2:
+                    InitRandomData();
                     TextButton.IsEnabled = true;
                     XMLButton.IsEnabled = true;
                     break;
             }
-            if (comboBox.SelectedIndex >= 0)
+            if (comboBoxDataSource.SelectedIndex >= 0)
             {
                 StartStopButton.Content = "Start";
             }
@@ -123,11 +215,16 @@ namespace DataHandlerTestApp
             }
         }
 
+        private void comboBoxStreaming_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Dont needed for the moment
+        }
+
         private void StartStopButton_Click(object sender, RoutedEventArgs e)
         {
             if (StartStopButton.Content.ToString() == "Start")
             {
-                switch (comboBox.SelectedIndex)
+                switch (comboBoxDataSource.SelectedIndex)
                 {
                     case 0: StartFileData(); break;
                     case 1: StartSerialData(); break;
@@ -137,19 +234,19 @@ namespace DataHandlerTestApp
                 textBox.Text = "";
                 dTimerUpdateText.Start();
                 StartStopButton.Content = "Stop";
-                comboBox.IsEnabled = false;
+                comboBoxDataSource.IsEnabled = false;
                 dataSettings.IsEnabled = false;
             }
             else if (StartStopButton.Content.ToString() == "Stop")
             {
                 dTimerUpdateText.Stop();
-                switch (comboBox.SelectedIndex)
+                switch (comboBoxDataSource.SelectedIndex)
                 {
                     case 0: StopFileData(); break;
                     case 1: StopSerialData(); break;
                     case 2: StopRandomData(); break;
                 }
-                comboBox.IsEnabled = true;
+                comboBoxDataSource.IsEnabled = true;
                 dataSettings.IsEnabled = true;
                 StartStopButton.Content = "Start";
             }
@@ -208,6 +305,16 @@ namespace DataHandlerTestApp
             return new AOUSettings.RandomSetting(uint.Parse(arr[0]), uint.Parse(arr[1]));
         }
 
+        private AOUSettings.RemoteSetting TextToRemoteSetting(string text)
+        {
+            string[] arr = text.Split(',');
+            if (arr.Length  == 4)
+            {
+                return new AOUSettings.RemoteSetting(arr[0], arr[1], arr[2], arr[3]);
+            }
+            return new AOUSettings.RemoteSetting("", "", "", "");
+        }
+
 
         /* Start */
         private void StartFileData()
@@ -217,7 +324,10 @@ namespace DataHandlerTestApp
 
         private void StartSerialData()
         {
-            router = new AOURouter(TextToSerialSetting(dataSettings.Text));
+            if (comboBoxStreaming.SelectedIndex == -1 || comboBoxStreaming.SelectedValue.ToString() == StreamRealDataStr)
+                router = new AOURouter(TextToSerialSetting(dataSettings.Text), AOUSettings.DebugMode.rawData);
+            else
+                router = new AOURouter(TextToSerialSetting(dataSettings.Text), AOUSettings.DebugMode.noDebug);
         }
 
         private void StartRandomData()
@@ -275,8 +385,10 @@ namespace DataHandlerTestApp
             this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
         }
 
+        // Todo
         private void TestLogAndPowerLists()
         {
+            // Todo check
             if (router != null)
             {
                 var logList = router.GetLastLogMessages(100);
@@ -285,7 +397,7 @@ namespace DataHandlerTestApp
                 {
                     foreach (var log in logList)
                     {
-                        this.textBox.Text += String.Format("Log time:{0}, {1}, msg:{2}\r\n", log.time, log.prio, log.message);
+                        this.textBox.Text += String.Format("Log time:{0}, {1}, msg:{2}" + Environment.NewLine, log.time, log.prio, log.message);
                     }
                 }
                 else
@@ -343,4 +455,5 @@ namespace DataHandlerTestApp
             Clipboard.SetContent(dataPackage);
         }
     }
+
 }

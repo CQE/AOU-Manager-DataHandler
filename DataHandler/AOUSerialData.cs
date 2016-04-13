@@ -23,10 +23,14 @@ namespace DataHandler
         private string textToSend = "";
         private string receivedText = "";
 
+        private List<string> deviceList;
+
         private AOUSettings.SerialSetting setting;
 
-        public AOUSerialData(AOUSettings.SerialSetting serialSetting) : base()
+        public AOUSerialData(AOUSettings.SerialSetting serialSetting, AOUSettings.DebugMode dbgMode = AOUSettings.DebugMode.noDebug) : base(dbgMode)
         {
+            deviceList = new List<string>();
+
             setting = serialSetting;
         }
 
@@ -37,18 +41,6 @@ namespace DataHandler
                 serialPort.Dispose();
                 serialPort = null;
             }
-        }
-
-        public override void Connect()
-        {
-            base.Connect();
-            InitComPort(setting.ComPort, setting.BaudRate);
-        }
-
-        public override void Disconnect()
-        {
-            base.Disconnect();
-            CancelReadTask();
         }
 
         public override bool SendData(string data)
@@ -70,6 +62,26 @@ namespace DataHandler
             return text;
         }
 
+
+        public override void Connect()
+        {
+            base.Connect();
+            if (setting.ComPort.Substring(0,3) == "RPI")
+            { 
+                InitRPiPort(setting.ComPort, setting.BaudRate);
+            }
+            else
+            { 
+                InitSerialPort(setting.ComPort, setting.BaudRate);
+            }
+        }
+
+        public override void Disconnect()
+        {
+            base.Disconnect();
+            CancelReadTask();
+        }
+
         private void ConfigureSerialPort(uint baudrate)
         {
             serialPort.WriteTimeout = TimeSpan.FromMilliseconds(1000);
@@ -84,42 +96,120 @@ namespace DataHandler
             AddDataLogText("Baudrate:" + serialPort.BaudRate + ", Parity:" + serialPort.Parity + ", Databits:" + serialPort.DataBits + ", Stopbits:" + serialPort.StopBits + ", No Handshake");
         }
 
-        private async void InitComPort(string portName, uint baudRate)
+
+        public async void GetAllDevices()
         {
+            deviceList.Clear();
+
             try
             {
-                string aqs = SerialDevice.GetDeviceSelector();
-                var dis = await DeviceInformation.FindAllAsync(aqs);
-
-                for (int i = 0; i < dis.Count; i++)
+                var devices = await DeviceInformation.FindAllAsync(SerialDevice.GetDeviceSelector());
+                if (devices.Count == 0)
                 {
-                    var dev = dis[i];
-                    var entry = dis[i]; // DeviceInformation
-                    serialPort = await SerialDevice.FromIdAsync(entry.Id);
-                    if (serialPort != null && serialPort.PortName == portName)
-                    {
-                        AddDataLogText("Found serial device: " + dev.Name + " on " + serialPort.PortName);
-                        ConfigureSerialPort(baudRate);
-                        break;
-                    }
-                }
-
-                if (serialPort != null)
-                { 
-                    ReadCancellationTokenSource = new CancellationTokenSource();
-                    Listen();
-                    Connected = true;
-                    AddDataLogText("Listening to " + serialPort.PortName);
+                    AddDataLogText("No SerialDevices found");
                 }
                 else
                 {
-                    AddDataLogText("Can not connect to Serial Device " + portName);
-                    Connected = false;
+                    AddDataLogText("Found " + devices.Count + " Serial devices");
+                    for (int i = 0; i < devices.Count; i++)
+                    {
+                        var port = await SerialDevice.FromIdAsync(devices[i].Id);
+                        if (port != null)
+                        { 
+                            deviceList.Add(port.PortName);
+                            AddDataLogText((i+1) + ": " + devices[i].Name + " - " + port.PortName + ", Kind:" + devices[i].Kind.ToString() + ", Enabled:" + devices[i].IsEnabled);
+                            port.Dispose();
+                        }
+                        else
+                        {
+                            AddDataLogText((i + 1) + ": " + devices[i].Name + " - No valid serial port, Kind:" + devices[i].Kind.ToString() + ", Enabled:" + devices[i].IsEnabled);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddDataLogText("SerialDevice exception: " + ex.Message);
+            }
+
+        }
+
+        private async void InitSerialPort(string portName, uint baudRate)
+        {
+            Connected = false;
+            try
+            {
+                var devices = await DeviceInformation.FindAllAsync(SerialDevice.GetDeviceSelector(portName), null);
+                if (devices.Count > 0)
+                {
+                    serialPort = await SerialDevice.FromIdAsync(devices[0].Id);
+                    if (serialPort != null)
+                    {
+                        ConfigureSerialPort(baudRate);
+                        ReadCancellationTokenSource = new CancellationTokenSource();
+                        Listen();
+                        Connected = true;
+                        AddDataLogText("Listening to " + devices[0].Name + " - " + serialPort.PortName);
+                    }
+                    else
+                    {
+                        AddDataLogText("Can not connect to Serial Device " + portName);
+                    }
+
+                    if (devices.Count > 1) AddDataLogText("More devices Found: " + devices.Count);
+                }
+                else 
+                {
+                    AddDataLogText("Device not found: " + portName);
                 }
             }
             catch (Exception ex)
             {
                 AddDataLogText("Connection exception: " + ex.Message);
+            }
+            if (!Connected)
+            {
+                GetAllDevices();
+            }
+        }
+
+        private async void InitRPiPort(string portName, uint baudRate)
+        {
+            // portName: RPI1, RPI2 ...
+            Connected = false;
+            try
+            {
+                var devices = await DeviceInformation.FindAllAsync(SerialDevice.GetDeviceSelector()); // Get all devices
+
+                if (devices.Count > 0)
+                {
+                    serialPort = await SerialDevice.FromIdAsync(devices[0].Id);
+                    if (serialPort != null)
+                    {
+                        AddDataLogText("Found serial device: " + devices[0].Name + " - " + devices[0].Id);
+                        ConfigureSerialPort(baudRate);
+                        ReadCancellationTokenSource = new CancellationTokenSource();
+                        Listen();
+                        Connected = true;
+                        AddDataLogText("Listening to " + devices[0].Name);
+                    }
+                    else
+                    {
+                        AddDataLogText("Can not connect to Serial Device " + devices[0].Name);
+                    }
+                }
+                else
+                {
+                    AddDataLogText("No RPI serial devices found");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddDataLogText("Connection exception: " + ex.Message);
+            }
+            if (!Connected)
+            { 
+                GetAllDevices();
             }
         }
 
@@ -177,6 +267,9 @@ namespace DataHandler
                 if (!ReadCancellationTokenSource.IsCancellationRequested)
                 {
                     ReadCancellationTokenSource.Cancel();
+                    AddDataLogText("Stop reading from serialDevice");
+
+                    // Must handle this anyway
                 }
             }
         }
@@ -194,7 +287,12 @@ namespace DataHandler
             loadAsyncTask = dataReaderObject.LoadAsync(ReadBufferLength).AsTask(cancellationToken);
 
             // Launch the task and wait
+            // AddDataLogText("await loadAsyncTask");
             UInt32 bytesRead = await loadAsyncTask;
+            if (debugMode != AOUSettings.DebugMode.noDebug)
+            { 
+                AddDataLogText("bytesRead:" + bytesRead);
+            }
             if (bytesRead > 0)
             {
                 receivedText += dataReaderObject.ReadString(bytesRead);
@@ -226,6 +324,7 @@ namespace DataHandler
                         serialPort.Dispose();
                     }
                     serialPort = null;
+                    AddDataLogText("Disconnected from serialDevice");
                 }
                 else
                 {

@@ -23,12 +23,23 @@ namespace DataHandler
             return time_minutes_of_week * 60000 + time_ms_of_minute;
         }
 
+
+        public static void TimeDecSecToAOUModelTime(long time_ms, out UInt16 time_hours, out UInt16 time_dec_sek)
+        {
+            time_hours = 0; //  (UInt16)(time_ms % 60000); // 1 hour = 60 min x 6 (s/10) = 36000
+            time_dec_sek = (UInt16)time_ms;
+        }
+
+        public static long AOUModelTimeDecSecToTimeMs(UInt16 time_hours, UInt16 time_dec_sek)
+        {
+            return time_hours*60*60*1000 + time_dec_sek*100;
+        }
+
+        public enum AOURunningMode { Idle = 0, Heating, Cooling, FixedCycling, AutoWithIMM }
+
         public enum CommandType
         {
-            // "Idle","Heating","Cooling","Fixed Cycling", "Auto with IMM"
-            CmdTypeToDo,
-            RunningModeIdle, RunningModeHeating, RunningModeCooling,
-            RunningModefixedCycling, RunningModeAutoWidthIMM,
+            CmdTypeToDo /* To use when not know */,    RunningMode,
 
             tempHotTankFeedSet, tempColdTankFeedSet, coolingTime, heatingTime,
             toolHeatingFeedPause, toolCoolingFeedPause,  hotDelayTime, coldDelayTime,

@@ -9,7 +9,7 @@ namespace DataHandler
 {
     public class AOURouter
     {
-        public const int MaxTotalValuesInMemory = 300;
+        public const int MaxTotalValuesInMemory = 60;
         public const int MaxTotalLogMessagesInMemory = 300;
 
         private DateTime startTime;
@@ -58,10 +58,10 @@ namespace DataHandler
             aouData.Connect();
         }
 
-        public AOURouter(AOUSettings.SerialSetting serialSetting) : this()
+        public AOURouter(AOUSettings.SerialSetting serialSetting, AOUSettings.DebugMode dbgMode) : this()
         {
             runMode = RunType.Serial;
-            aouData = new AOUSerialData(serialSetting);
+            aouData = new AOUSerialData(serialSetting, dbgMode);
             aouData.Connect();
         }
 
@@ -94,6 +94,14 @@ namespace DataHandler
                 return text;
             }
 
+        }
+
+        public string GetRawData()
+        {
+            if (aouData != null)
+                return aouData.GetRawData();
+            else
+                return "";
         }
 
         public bool SendToPlc(string text)
@@ -163,15 +171,23 @@ namespace DataHandler
                 {
                     logMessages.RemoveRange(0, logMessages.Count - maxTotalLogsInMemory);
                 }
-               
             }
-
-
         }
 
         /************************
             Value Handling
+
+            if (aouData.AreNewValuesAvailable())
+            {
+                powerValues.AddRange(aouData.GetNewValues());
+                if (powerValues.Count > MaxTotalValuesInMemory)
+                {
+                    powerValues.RemoveRange(0, powerValues.Count - MaxTotalValuesInMemory);
+                }
+}
+
         ************************/
+
         public List<Power> GetLastPowerValues(int count)
         {
             if (powerValues.Count > 0)
@@ -212,17 +228,41 @@ namespace DataHandler
             return powerValues.Count;
         }
 
-        public Power GetPowerValuesFromStartTime(long time, int count)
+        /*
+        public List<Power> GetNewPowerValues()
         {
-            int index = 0;
-            var res = powerValues.Find(item => item.ElapsedTime == time);
-            return res;
+            var powerList = new List<Power>();
+            if (powerValues.Count > 0)
+            {
+                lastPowerValuesCount = powerValues.Count;
+                powerList.Add(powerValues[lastPowerValuesCount - 1]); // Todo. All last power messages
+            }
 
-            // return powerValues.GetRange(lastPowerValuesCount - count, count).ToArray();
+            return powerList;
         }
+
+         public List<Power> GetPowerValuesFromStartTime(long time, int count)
+         {
+             var res = powerValues.Find(item => item.ElapsedTime == time);
+             return res;
+         }
+         */
 
         /**************************
             Log Message Handling
+
+            if (aouData.AreNewLogMessagesAvailable())
+            {
+                var logs = aouData.GetNewLogMessages();
+        logMessages.AddRange(logs);
+                AddLogToFile(logs);
+                if (logMessages.Count > MaxTotalLogMessagesInMemory)
+                {
+                    logMessages.RemoveRange(0, logMessages.Count - MaxTotalLogMessagesInMemory);
+                }
+            }
+
+
         **************************/
         public AOULogMessage[] GetLastLogMessages(int count)
         {
