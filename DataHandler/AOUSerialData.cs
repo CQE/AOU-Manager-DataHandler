@@ -142,6 +142,7 @@ namespace DataHandler
                 var devices = await DeviceInformation.FindAllAsync(SerialDevice.GetDeviceSelector(portName), null);
                 if (devices.Count > 0)
                 {
+
                     serialPort = await SerialDevice.FromIdAsync(devices[0].Id);
                     if (serialPort != null)
                     {
@@ -173,7 +174,7 @@ namespace DataHandler
             }
         }
 
-        private async void InitRPiPort(string portName, uint baudRate)
+        private async void InitRPiPort(string deviceName, uint baudRate)
         {
             // portName: RPI1, RPI2 ...
             Connected = false;
@@ -183,15 +184,24 @@ namespace DataHandler
 
                 if (devices.Count > 0)
                 {
-                    serialPort = await SerialDevice.FromIdAsync(devices[0].Id);
+                    string numStr = deviceName.Substring(deviceName.Length - 1);
+                    int num = 1;
+                    int.TryParse(numStr, out num);
+                    if (devices.Count < num)
+                    {
+                        num = 1;
+                    }
+                    num--;
+                    AddDataLogText(deviceName + " -> " + num);
+                    serialPort = await SerialDevice.FromIdAsync(devices[num].Id);
                     if (serialPort != null)
                     {
-                        AddDataLogText("Found serial device: " + devices[0].Name + " - " + devices[0].Id);
+                        AddDataLogText("Found serial device: " + devices[num].Name + " - " + devices[num].Id);
                         ConfigureSerialPort(baudRate);
                         ReadCancellationTokenSource = new CancellationTokenSource();
                         Listen();
                         Connected = true;
-                        AddDataLogText("Listening to " + devices[0].Name);
+                        AddDataLogText("Listening to " + devices[num].Name);
                     }
                     else
                     {
