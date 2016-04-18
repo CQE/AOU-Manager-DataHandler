@@ -7,10 +7,57 @@ using System.Diagnostics;
 
 namespace DataHandler 
 {
+    /*
+f.     Visning ”Tool tempering” (HEAT/COOL/IDLE) styrd av FA-DUINO (beräknas löpande av FA-DUINO)
+    Funkar inte
+
+g.       Visning ”Running mode” (Heating/Cooling/Fxed cyclig/AOU with IMM/Idle) styrd av FA-DUINO (i.e. knapparna på AOU frontpanel)
+    Funkar inte, kan ändra och kommandot skickas. Vi tar ej emot
+
+h.      Visning ”AOU/IMM interaction” styrd av FA-DUINO
+    Dessa kom inte förut 
+
+i.         Logg-meddelandena från FA-DUINO visas löpande i logglistan på GUI
+    Funkar i debug kraschade nyss i release. Urban tror han har fixat
+
+2.       Önskvärt:
+
+a.       Kunna använda vår display med touch ansluten till denna PC
+    Ingen aning hur jag skulle kunna fixa det. Skärmen är hos Urban just nu. Jag kan fråga honom hur det fungerar hos honom.
+
+b.      Läsa av temperaturer från kurvorna
+    Ska titta på det
+
+3.       Bra att ha:
+    a.       Händelselogg-filer (någon besökare an tänkas fråga)
+        Tror textfiler sparas, excel fungerar inte just nu
+    */
+
     public class AOURouter
     {
-        public const int MaxTotalValuesInMemory = 60;
-        public const int MaxTotalLogMessagesInMemory = 300;
+        public const int MaxTotalValuesInMemory = 1000;
+        public const int MaxTotalLogMessagesInMemory = 1000;
+
+        private List<AOULogMessage> logMessages;
+        private List<Power> powerValues;
+
+        public int NewPowerValuesAvailable { get; private set; }
+
+        public int NewLogMessagesAvailable { get; private set; }
+
+        public int TotNumValues
+        { get
+            {
+                return logMessages.Count;
+            }
+        }
+
+        public int TotNumLogMessages
+        { get
+            {
+                return logMessages.Count;
+            }
+        }
 
         private DateTime startTime;
 
@@ -25,20 +72,13 @@ namespace DataHandler
 
         private AOULogFile aouLogFile;
 
-        private List<AOULogMessage> logMessages;
-        private List<Power> powerValues;
-
-        private int lastLogMessageCount;
-        private int lastPowerValuesCount;
-
         private string applogstr = "AOURouter. No run mode selected";
 
         public AOURouter()
         {
             logMessages = new List<AOULogMessage>();
             powerValues = new List<Power>();
-            lastLogMessageCount = 0; // Ready to get from start
-            lastPowerValuesCount = 0;
+
             runMode = RunType.None;
             startTime = DateTime.Now;
             aouLogFile = new AOULogFile(startTime);
@@ -106,8 +146,7 @@ namespace DataHandler
 
         public bool SendToPlc(string text)
         {
-
-            logMessages.Add(new AOULogMessage(AOUHelper.GetNowToMs(), "SendToPlc: "+ text, 12, 0));
+            // logMessages.Enqueue(new AOULogMessage(AOUHelper.GetNowToMs(), "SendToPlc: "+ text, 12, 0));
             if (aouData != null)
                 return aouData.SendData(text);
             else
@@ -154,117 +193,98 @@ namespace DataHandler
 
             if (aouData.AreNewValuesAvailable())
             {
-                powerValues.AddRange(aouData.GetNewValues());
-                if (powerValues.Count > MaxTotalValuesInMemory)
-                {
-                    powerValues.RemoveRange(0, powerValues.Count - MaxTotalValuesInMemory);
+                var newValues = aouData.GetNewValues();
+                for (int i = 0; i < newValues.Length; i++)
+                { 
+                    powerValues.Add(newValues[i]); // Add new value
+                    NewPowerValuesAvailable++;
+                    if (powerValues.Count > MaxTotalValuesInMemory)
+                    {
+                        powerValues.RemoveAt(0); // Delete first Power values
+                    }
                 }
             }
 
             if (aouData.AreNewLogMessagesAvailable())
             {
-                int maxTotalLogsInMemory = 100;
                 var logs = aouData.GetNewLogMessages();
-                logMessages.AddRange(logs);
-                AddLogToFile(logs);
-                if (logMessages.Count > maxTotalLogsInMemory)
+                AddLogToFile(logs); // Save new log messages to log file
+                for (int i = 0; i < logs.Length; i++)
                 {
-                    logMessages.RemoveRange(0, logMessages.Count - maxTotalLogsInMemory);
+                    logMessages.Add(logs[i]);
+                    NewLogMessagesAvailable++;
+                    if (logMessages.Count > MaxTotalLogMessagesInMemory)
+                    {
+                        logMessages.RemoveAt(0); // Delete first Log message
+                    }
                 }
             }
         }
 
-        /************************
-            Value Handling
-
-            if (aouData.AreNewValuesAvailable())
-            {
-                powerValues.AddRange(aouData.GetNewValues());
-                if (powerValues.Count > MaxTotalValuesInMemory)
-                {
-                    powerValues.RemoveRange(0, powerValues.Count - MaxTotalValuesInMemory);
-                }
-}
-
-        ************************/
-
-        public List<Power> GetLastPowerValues(int count)
+        public long GetTimeBetween(List<Power> powers, long defaultTimeBetween)
         {
-            if (powerValues.Count > 0)
+            int firstNullTime = -1;
+            for (int i = 0; i < powers.Count; i++)
             {
-                if (count > powerValues.Count)
+                if (powers[i].ElapsedTime == 0)
                 {
-                    count = powerValues.Count;
+                    firstNullTime = i;
+                    break;
                 }
-                lastPowerValuesCount = powerValues.Count;
-                return powerValues.GetRange(lastPowerValuesCount - count, count);
             }
-            else
+            if (firstNullTime > 2 && firstNullTime < powers.Count) // Minimum number of real values to calculate time between
             {
-                return new List<Power>();
+
+                // Replace time in dummy values with expected time values
+                long diff = powers[firstNullTime - 1].ElapsedTime - powers[0].ElapsedTime;
+                if (diff > (100 * firstNullTime)) // minimum accepted
+                {
+                    long newTimeBetween = diff / (powers.Count - 1);
+                    long time = powers[firstNullTime - 1].ElapsedTime; // last real time
+                    for (int i = firstNullTime; i < powers.Count; i++)
+                    {
+                        time += newTimeBetween;
+                        Power pow = powers[i];
+                        pow.ElapsedTime = time;
+                        powers[i] = pow;
+                    }
+                    return newTimeBetween;
+                }
             }
+            return defaultTimeBetween;
         }
 
-        public bool NewPowerDataIsAvailable()
+        public List<Power> GetLastPowerValues(int count, out int timeBetween, int defaultTimeBetween)
         {
-            return (powerValues.Count  > lastPowerValuesCount);
+            timeBetween = defaultTimeBetween;
+            List<Power> powers = new List<Power>(count);
+            for (int i = 0; i <= NewPowerValuesAvailable; i++)
+            {
+                powers[NewPowerValuesAvailable - i] = powerValues[i - NewPowerValuesAvailable]; 
+            }
+            GetTimeBetween(powers, defaultTimeBetween);
+
+            NewPowerValuesAvailable = 0;
+            return powers;
         }
 
         public Power GetLastNewPowerValue()
         {
-            if (powerValues.Count > 0)
+            if (NewPowerValuesAvailable > 0)
             {
-                lastPowerValuesCount = powerValues.Count;
-                return powerValues[lastPowerValuesCount - 1];
+                NewPowerValuesAvailable = 0; 
+                return powerValues[powerValues.Count-1];
             }
             else
             {
-                return new Power();
+                return new Power(); // Must return something
             }
         }
-
-        public int GetNumPowerValues()
-        {
-            return powerValues.Count;
-        }
-
-        /*
-        public List<Power> GetNewPowerValues()
-        {
-            var powerList = new List<Power>();
-            if (powerValues.Count > 0)
-            {
-                lastPowerValuesCount = powerValues.Count;
-                powerList.Add(powerValues[lastPowerValuesCount - 1]); // Todo. All last power messages
-            }
-
-            return powerList;
-        }
-
-         public List<Power> GetPowerValuesFromStartTime(long time, int count)
-         {
-             var res = powerValues.Find(item => item.ElapsedTime == time);
-             return res;
-         }
-         */
 
         /**************************
             Log Message Handling
-
-            if (aouData.AreNewLogMessagesAvailable())
-            {
-                var logs = aouData.GetNewLogMessages();
-        logMessages.AddRange(logs);
-                AddLogToFile(logs);
-                if (logMessages.Count > MaxTotalLogMessagesInMemory)
-                {
-                    logMessages.RemoveRange(0, logMessages.Count - MaxTotalLogMessagesInMemory);
-                }
-            }
-
-
         **************************/
-        public AOULogMessage[] GetLastLogMessages(int count)
+        public List<AOULogMessage> GetLastLogMessages(int count)
         {
             if (logMessages.Count > 0)
             { 
@@ -272,31 +292,26 @@ namespace DataHandler
                 {
                     count = logMessages.Count;
                 }
-                lastLogMessageCount = logMessages.Count;
-                return logMessages.GetRange(lastLogMessageCount - count, count).ToArray();
+                NewPowerValuesAvailable = 0;
+                return logMessages.GetRange(logMessages.Count - count, count);
             }
             else
             {
-                return new AOULogMessage[0];
+                return new List<AOULogMessage>();
             }
         }
 
-        public bool NewLogMessagesAreAvailable()
+        public List<AOULogMessage> GetNewLogMessages()
         {
-            return (logMessages.Count > lastLogMessageCount);
-        }
-
-        public AOULogMessage[] GetNewLogMessages()
-        {
-            if (logMessages.Count > 0)
-            { 
-                int lmc = lastLogMessageCount;
-                lastLogMessageCount = logMessages.Count;
-                return logMessages.GetRange(lmc, logMessages.Count - lmc).ToArray();
+            if (NewPowerValuesAvailable > 0)
+            {
+                var logs = logMessages.GetRange(logMessages.Count - NewLogMessagesAvailable, NewLogMessagesAvailable);
+                NewLogMessagesAvailable = 0;
+                return logs;
             }
             else
             {
-                return new AOULogMessage[0];
+                return new List<AOULogMessage>();
             }
         }
     }

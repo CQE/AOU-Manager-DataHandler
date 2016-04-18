@@ -466,6 +466,45 @@ namespace DataHandler
             <state><Time>4721</Time>  // One second (or 10 x 1/10 second) later
                <Valves>0100</Valves>       // Hot feed valve “off” (i.e. stopped feeding hot tempering fluid)
             </state>
+
+f. Tool tempering mode
+// <state><Time>104898416</Time>
+//…
+//   <Mode>1</Mode> (int), for modes see below
+//
+#define HT_STATE_INVALID -999
+#define HT_STATE_COLD -1
+#define HT_STATE_UNKNOWN 0
+#define HT_STATE_HOT 1
+ 
+g. Knapparnas körläge
+// <state><Time>104898416</Time>
+//…
+//   <UI>MMSS</UI> (hex) MM=8bit mask, SS=8bits , for buttons see below
+//
+#define BUTTON_ONOFF                  0x0001  // Soft on/Off
+#define BUTTON_EMERGENCYOFF  0x0002  // Hard Off
+ 
+#define BUTTON_MANUALOPHEAT  0x0004  // Forced Heating
+#define BUTTON_MANUALOPCOOL  0x0008  // Forced Cooling
+ 
+#define BUTTON_CYCLE                      0x0010  // Forced Cycling
+#define BUTTON_RUN                         0x0020  // Run with IMM
+ 
+ 
+h. Signals AOU/IMM interaction
+// <state><Time>104898416</Time>
+//…
+//   <IMM>MMSS</IMM> (hex)  MM=8bit mask, SS=8bits for signals (see below)
+//
+#define IMM_OutIMMError       0x01
+#define IMM_OutIMMBlockInject 0x02
+#define IMM_OutIMMBlockOpen   0x04
+#define IMM_InIMMStop         0x08
+#define IMM_InCycleAuto       0x10
+#define IMM_InIMMInjecting    0x20
+#define IMM_InIMMEjecting     0x40
+#define IMM_InIMMToolClosed   0x80
             */
             stateData.time_min_of_week = 0;
             stateData.time_ms_of_min = 0;

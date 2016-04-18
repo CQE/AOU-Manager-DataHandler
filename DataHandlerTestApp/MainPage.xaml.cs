@@ -28,6 +28,8 @@ namespace DataHandlerTestApp
     {
         AOURouter router;
 
+        int timeBetween = 1000;
+
         private DispatcherTimer dTimerUpdateData;
         private DispatcherTimer dTimerUpdateText;
 
@@ -80,6 +82,7 @@ namespace DataHandlerTestApp
             dTimerUpdateText = new DispatcherTimer();
             dTimerUpdateText.Tick += UpdateTextTick;
             dTimerUpdateText.Interval = new TimeSpan(0, 0, 0, 1, 0);
+
         }
 
         void UpdateDataTick(object sender, object e)
@@ -95,7 +98,7 @@ namespace DataHandlerTestApp
 
         private void AddLogMessagesToTextBox()
         {
-            if (router.NewLogMessagesAreAvailable())
+            if (router.NewLogMessagesAvailable > 0)
             {
                 var logs = router.GetNewLogMessages();
                 foreach (var log in logs)
@@ -107,16 +110,16 @@ namespace DataHandlerTestApp
 
         private void AddPowerValuesToTextBox(bool onlyLast = true)
         {
-            if (router.NewPowerDataIsAvailable())
+            if (router.NewPowerValuesAvailable > 0)
             {
                 if (onlyLast)
                 { 
                     var power = router.GetLastNewPowerValue();
-                    textBox.Text += router.GetLastNewPowerValue().ToString() + Environment.NewLine;
+                    textBox.Text += power.ToString() + Environment.NewLine;
                 }
                 else
                 {
-                    var powers = router.GetLastPowerValues(30);
+                    var powers = router.GetLastPowerValues(30, out timeBetween, 1000);
                     foreach (var power in powers)
                     {
                         textBox.Text += power.ToString() + Environment.NewLine;
@@ -377,7 +380,14 @@ namespace DataHandlerTestApp
 
         private void TextButton_Click(object sender, RoutedEventArgs e)
         {
-            this.textBox.Text = AOURandomData.CreateRandomText(30, 0, 1000);
+            if (router != null)
+            {
+                var list = router.GetLastPowerValues(30, out timeBetween, 1000);
+                foreach (var pow in list)
+                {
+                    this.textBox.Text += pow.ToString() + "\r\n"; ;
+                }
+            }
         }
 
         private void XMLButton_Click(object sender, RoutedEventArgs e)
@@ -392,8 +402,8 @@ namespace DataHandlerTestApp
             if (router != null)
             {
                 var logList = router.GetLastLogMessages(100);
-                var pwrList = router.GetLastPowerValues(300);
-                if (logList.Length > 0)
+                var pwrList = router.GetLastPowerValues(300, out timeBetween, 1000);
+                if (logList.Count > 0)
                 {
                     foreach (var log in logList)
                     {
