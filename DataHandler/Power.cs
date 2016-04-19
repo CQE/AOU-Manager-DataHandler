@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     /*
      Run view Parameter monitoring:
@@ -44,10 +44,10 @@ namespace DataHandler
 
     public struct Power
     {
-        public Power(long etime = 0)
+        public Power(long etime)
         {
             ElapsedTime = etime;
-            State = AOUTypes.StateType.NOTHING;
+            State = AOUDataTypes.StateType.NOTHING;
 
             THotTank = double.NaN;
             TColdTank = double.NaN;
@@ -67,6 +67,7 @@ namespace DataHandler
             ValveFeedCold = double.NaN;
             ValveReturn = double.NaN;
             ValveCoolant = double.NaN;
+
             PowerHeating = double.NaN;
         }
 
@@ -76,7 +77,7 @@ namespace DataHandler
         /*
         */
 //        public AOUTypes.StateType State { get; set; }
-        public AOUTypes.StateType State { get; set; }
+        public AOUDataTypes.StateType State { get; set; }
 
         public double THotTank { get; set; }
         public double TColdTank { get; set; }

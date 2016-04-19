@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     public class AOURandomData:AOUData
     {
@@ -38,24 +38,24 @@ namespace DataHandler
         }
 
         #region private static methods
+        /*
         private static string CreateRandomTempXmlString(long time)
         {
             var rndData = ValueGenerator.GetRandomTempData(time);
             return AOUInputParser.CreateTempXmlString(time, rndData);
         }
 
-        private static string CreateRandomSeqXmlString(long time, AOUTypes.StateType state)
+        private static string CreateRandomSeqXmlString(long time, AOUDataTypes.StateType state)
         {
             var rndData = ValueGenerator.GetRandomSeqData(time, state);
             return AOUInputParser.CreateSeqXmlString(time, rndData);
         }
 
-        private static string CreateRandomIMMXmlString(long time, AOUTypes.IMMSettings settings)
+        private static string CreateRandomIMMXmlString(long time, AOUDataTypes.IMMSettings settings)
         {
             var rndData = ValueGenerator.GetRandomIMMData(time, settings);
             return AOUInputParser.CreateIMMXmlString(time, rndData);
         }
-
         private static string CreateRandomColdFeedXmlString(long time)
         {
             var rndData = ValueGenerator.GetRandomColdFeedData(time);
@@ -86,6 +86,7 @@ namespace DataHandler
             return AOUInputParser.CreateValvesXmlString(time, rndData);
         }
 
+                    */
         private static string CreateRandomLogXmlString(long time)
         {
             return AOUInputParser.CreateLogXmlString(time, ValueGenerator.GetRandomLogMsg(1000));
@@ -107,21 +108,21 @@ namespace DataHandler
         {
             string xml = "";
             long time = startTime + msBetween;
-            AOUTypes.StateType state = AOUTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY;
-            AOUTypes.IMMSettings immSetting = AOUTypes.IMMSettings.CycleAuto;
+            AOUDataTypes.StateType state = AOUDataTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY;
+            AOUDataTypes.IMMSettings immSetting = AOUDataTypes.IMMSettings.InCycleAuto;
 
             for (int i = 0; i < num; i++)
             {
+                /*
                 xml += CreateRandomTempXmlString(time) + "\r\n";
-
-                if (state == AOUTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY)
+                if (state == AOUDataTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY)
                     xml += CreateRandomHotFeedXmlString(time) + "\r\n";
-                else if (state == AOUTypes.StateType.SQ_WAIT_COLD_AT_MOULD_ENTRY)
+                else if (state == AOUDataTypes.StateType.SQ_WAIT_COLD_AT_MOULD_ENTRY)
                     xml += CreateRandomColdFeedXmlString(time) + "\r\n";
 
-                if (state == AOUTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY)
+                if (state == AOUDataTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY)
                     xml += CreateRandomHotLevelString(time) + "\r\n";
-                else if (state == AOUTypes.StateType.SQ_WAIT_COLD_AT_MOULD_ENTRY)
+                else if (state == AOUDataTypes.StateType.SQ_WAIT_COLD_AT_MOULD_ENTRY)
                     xml += CreateRandomColdLevelString(time) + "\r\n";
 
                 xml += CreateRandomValvesXmlString(time) + "\r\n";
@@ -131,9 +132,9 @@ namespace DataHandler
                 if ((i % 5) == 0)
                 {
                     xml += CreateRandomSeqXmlString(time, state) + "\r\n";
-                    if (state == AOUTypes.StateType.SQ_WAIT_FOR_OPEN_END)
+                    if (state == AOUDataTypes.StateType.SQ_WAIT_FOR_OPEN_END)
                     {
-                        state = AOUTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY;
+                        state = AOUDataTypes.StateType.SQ_WAIT_HOT_AT_MOULD_ENTRY;
                     }
                     else
                     {
@@ -148,16 +149,17 @@ namespace DataHandler
 
                 if ((i % 10) == 0)
                 {
-                    xml += CreateRandomIMMXmlString(time, immSetting) + "\r\n";
-                    if (immSetting == AOUTypes.IMMSettings.IMMToolClosed)
+                   xml += CreateRandomIMMXmlString(time, immSetting) + "\r\n";
+                    if (immSetting == AOUDataTypes.IMMSettings.IMMToolClosed)
                     {
-                        immSetting = AOUTypes.IMMSettings.SetIMMBlockInject;
+                        immSetting = AOUDataTypes.IMMSettings.SetIMMBlockInject;
                     }
                     else
                     {
                         immSetting++;
                     }
                 }
+                */
             }
             return xml;
         }

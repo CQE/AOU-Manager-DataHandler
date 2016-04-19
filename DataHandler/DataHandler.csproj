@@ -119,7 +119,6 @@
     <Compile Include="AOURouter.cs" />
     <Compile Include="AOUSettings.cs" />
     <Compile Include="AOUInputParser.cs" />
-    <Compile Include="AOUInputStream.cs" />
     <Compile Include="AOUTypes.cs" />
     <Compile Include="AOUValuesFile.cs" />
     <Compile Include="Power.cs" />

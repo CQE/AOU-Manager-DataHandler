@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     class AOUHelper
     {
@@ -21,6 +21,11 @@ namespace DataHandler
         {
             return (long)(Math.Round(ms * 1.0 / msbetween) * msbetween);
 
+        }
+
+        public static TimeSpan msToTimeSpan(long time_ms)
+        {
+            return TimeSpan.FromMilliseconds(time_ms);
         }
 
         public static string msToTimeSpanStr(long time_ms)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace DataHandler
+namespace DemoPrototype
 {
 
     public class StreamCRC32
@@ -90,6 +90,7 @@ namespace DataHandler
        */
     }
 
+
     [StructLayout(LayoutKind.Sequential, Pack = 2)] // Pack = 0, 1, 2, 4, 8, 16, 32, 64, or 128:
     public struct AOUStateData
     {
@@ -102,8 +103,22 @@ namespace DataHandler
         public UInt16 bufHot;
         public UInt16 bufMid;
         public UInt16 bufCold;
+
+        public UInt16 BearHot;
+
+        public UInt16 Power;
+        public UInt16 Energy;
+
+        public UInt16 Valves;
+        public UInt16 IMM;
+
+        public UInt16 SeqState;
     }
 
+    #region OldStructs
+    /*
+    Old structs
+    */
     // Can this be more effective ??
     [StructLayout(LayoutKind.Sequential, Pack = 2)] // Pack = 0, 1, 2, 4, 8, 16, 32, 64, or 128:
         public struct AOUTemperatureData
@@ -178,6 +193,6 @@ namespace DataHandler
             public UInt16 imm_setting_type;
             public UInt16 imm_setting_val;
     }
-
+    #endregion
 
 }

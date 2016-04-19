@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace DataHandler 
+namespace DemoPrototype
 {
     /*
 f.     Visning ”Tool tempering” (HEAT/COOL/IDLE) styrd av FA-DUINO (beräknas löpande av FA-DUINO)
@@ -40,6 +40,8 @@ b.      Läsa av temperaturer från kurvorna
 
         private List<AOULogMessage> logMessages;
         private List<Power> powerValues;
+
+        private Power lastPower;
 
         public int NewPowerValuesAvailable { get; private set; }
 
@@ -153,7 +155,12 @@ b.      Läsa av temperaturer från kurvorna
                 return false;
         }
 
-        public void SendCommandToPlc(AOUTypes.CommandType cmd, int value)
+        public void SendTagCommandToPlc(string subTag, int value)
+        {
+            SendToPlc(String.Format("<cmd><{0}>{1}</{0}></cmd>", subTag, value));
+        }
+
+        public void SendCommandToPlc(AOUDataTypes.CommandType cmd, int value)
         {
             /*
                 (temperature in C)	<cmd><tempHotTankFeedSet>195</tempHotTankFeedSet></cmd>	
@@ -165,18 +172,18 @@ b.      Läsa av temperaturer från kurvorna
 
             switch (cmd)
             {
-                case AOUTypes.CommandType.tempHotTankFeedSet:
-                    SendToPlc(String.Format("<cmd><tempHotTankFeedSet>{0}</tempHotTankFeedSet></cmd>", value)); break;
-                case AOUTypes.CommandType.tempColdTankFeedSet:
-                    SendToPlc(String.Format("<cmd><tempColdTankFeedSet>{0}</tempColdTankFeedSet></cmd>", value)); break;
-                case AOUTypes.CommandType.coolingTime:
-                    SendToPlc(String.Format("<cmd><coolingTime>{0}</coolingTime></cmd>", value)); break;
-                case AOUTypes.CommandType.heatingTime:
-                    SendToPlc(String.Format("<cmd><heatingTime>{0}</heatingTime></cmd>", value)); break;
-                case AOUTypes.CommandType.toolHeatingFeedPause:
-                    SendToPlc(String.Format("<cmd><toolHeatingFeedPause>{0}</toolHeatingFeedPause></cmd>", value)); break;
+                case AOUDataTypes.CommandType.tempHotTankFeedSet:
+                    SendTagCommandToPlc("tempHotTankFeedSet", value); break;
+                case AOUDataTypes.CommandType.tempColdTankFeedSet:
+                    SendTagCommandToPlc("tempColdTankFeedSet", value); break;
+                case AOUDataTypes.CommandType.coolingTime:
+                    SendTagCommandToPlc("coolingTime", value); break;
+                case AOUDataTypes.CommandType.heatingTime:
+                    SendTagCommandToPlc("heatingTime", value); break;
+                case AOUDataTypes.CommandType.toolHeatingFeedPause:
+                    SendTagCommandToPlc("toolHeatingFeedPause", value); break;
                 default:
-                    SendToPlc(String.Format("<cmd><{0}>{1}</{0}></cmd>", cmd, value)); break;
+                    SendTagCommandToPlc(cmd.ToString(), value); break;
             }
         }
 
@@ -226,7 +233,7 @@ b.      Läsa av temperaturer från kurvorna
             int firstNullTime = -1;
             for (int i = 0; i < powers.Count; i++)
             {
-                if (powers[i].ElapsedTime == 0)
+                if (powers[i].ElapsedTime == 0 && i > 0)
                 {
                     firstNullTime = i;
                     break;
@@ -239,7 +246,7 @@ b.      Läsa av temperaturer från kurvorna
                 long diff = powers[firstNullTime - 1].ElapsedTime - powers[0].ElapsedTime;
                 if (diff > (100 * firstNullTime)) // minimum accepted
                 {
-                    long newTimeBetween = diff / (powers.Count - 1);
+                    long newTimeBetween = diff / (firstNullTime - 1);
                     long time = powers[firstNullTime - 1].ElapsedTime; // last real time
                     for (int i = firstNullTime; i < powers.Count; i++)
                     {
@@ -257,14 +264,26 @@ b.      Läsa av temperaturer från kurvorna
         public List<Power> GetLastPowerValues(int count, out int timeBetween, int defaultTimeBetween)
         {
             timeBetween = defaultTimeBetween;
-            List<Power> powers = new List<Power>(count);
-            for (int i = 0; i <= NewPowerValuesAvailable; i++)
+            List<Power> powers = new List<Power>();
+            int numValues = count;
+            if (numValues > powerValues.Count)
             {
-                powers[NewPowerValuesAvailable - i] = powerValues[i - NewPowerValuesAvailable]; 
+                numValues = powerValues.Count;
             }
-            GetTimeBetween(powers, defaultTimeBetween);
-
+            for (int i = 0; i < numValues; i++)
+            {
+                powers.Add(powerValues[powerValues.Count - numValues + i]); 
+            }
             NewPowerValuesAvailable = 0;
+            if (numValues < count)
+            {
+                for (int i = numValues; i < count; i++)
+                {
+                    powers.Add(new Power(0));
+                }
+                GetTimeBetween(powers, defaultTimeBetween);
+            }
+
             return powers;
         }
 
@@ -277,7 +296,7 @@ b.      Läsa av temperaturer från kurvorna
             }
             else
             {
-                return new Power(); // Must return something
+                return new Power(0); // Must return something
             }
         }
 

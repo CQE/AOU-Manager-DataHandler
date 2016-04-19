@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
 
-    public struct AOULogMessage
+    public class AOULogMessage
     {
-        public string time
+        public TimeSpan time
         {
             get; set;
         }
@@ -31,7 +31,7 @@ namespace DataHandler
 
         public AOULogMessage(long logTime, string logMsg)
         {
-            time = AOUHelper.msToTimeSpanStr(logTime);
+            time = AOUHelper.msToTimeSpan(logTime);
             message = logMsg;
             prio = 0;
             pid = 0;
@@ -39,7 +39,7 @@ namespace DataHandler
 
         public AOULogMessage(long logTime, string logMsg, uint logPrio, uint logProcessId)
         {
-            time = AOUHelper.msToTimeSpanStr(logTime);
+            time = AOUHelper.msToTimeSpan(logTime);
             message = logMsg;
             prio = logPrio;
             pid = logProcessId;

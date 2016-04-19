@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     static public class ValueGenerator
     {
@@ -73,7 +73,7 @@ namespace DataHandler
         {
             AOUTemperatureData tempData; // = new AOUModels.AOUTemperatureData();
 
-            AOUTypes.TimeMsToAOUModelTime(time, out tempData.time_min_of_week, out tempData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out tempData.time_min_of_week, out tempData.time_ms_of_min);
 
             tempData.coldTankTemp = RealToWordX100(ValueGenerator.GetTColdTankValue());
             tempData.hotTankTemp = RealToWordX100(ValueGenerator.GetTHotTankValue());
@@ -86,7 +86,7 @@ namespace DataHandler
         static public AOUHotFeedData GetRandomHotFeedData(long time)
         {
             AOUHotFeedData feedData; // = new AOUModels.AOUTemperatureData();
-            AOUTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
             feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
             feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
 
@@ -96,7 +96,7 @@ namespace DataHandler
         static public AOUColdFeedData GetRandomColdFeedData(long time)
         {
             AOUColdFeedData feedData; // = new AOUModels.AOUTemperatureData();
-            AOUTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out feedData.time_min_of_week, out feedData.time_ms_of_min);
             feedData.newFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
             feedData.prevFeedTemp = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
 
@@ -106,7 +106,7 @@ namespace DataHandler
         static public AOUHotLevelData GetRandomHotLevelData(long time)
         {
             AOUHotLevelData levelData; // = new AOUModels.AOUTemperatureData();
-            AOUTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
             levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
             levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
 
@@ -116,7 +116,7 @@ namespace DataHandler
         static public AOUColdLevelData GetRandomColdLevelData(long time)
         {
             AOUColdLevelData levelData; // = new AOUModels.AOUTemperatureData();
-            AOUTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out levelData.time_min_of_week, out levelData.time_ms_of_min);
             levelData.newLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
             levelData.prevLevel = RealToWordX100(ValueGenerator.GetValveFeedColdValue());
 
@@ -126,7 +126,7 @@ namespace DataHandler
         static public AOUValvesData GetRandomValvesData(long time)
         {
             AOUValvesData valvesData; // = new AOUModels.AOUTemperatureData();
-            AOUTypes.TimeMsToAOUModelTime(time, out valvesData.time_min_of_week, out valvesData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out valvesData.time_min_of_week, out valvesData.time_ms_of_min);
 
             valvesData.newValveReturnTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
             valvesData.prevValveReturnTemp = RealToWordX100(ValueGenerator.GetValveFeedHotValue());
@@ -134,10 +134,10 @@ namespace DataHandler
             return valvesData;
         }
 
-        static public AOUSeqData GetRandomSeqData(long time, AOUTypes.StateType state)
+        static public AOUSeqData GetRandomSeqData(long time, AOUDataTypes.StateType state)
         {
             AOUSeqData seqData;
-            AOUTypes.TimeMsToAOUModelTime(time, out seqData.time_min_of_week, out seqData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out seqData.time_min_of_week, out seqData.time_ms_of_min);
 
             seqData.state = (UInt16)state;
             seqData.cycle = 0;
@@ -145,11 +145,11 @@ namespace DataHandler
             return seqData;
         }
 
-        static public AOUIMMData GetRandomIMMData(long time, AOUTypes.IMMSettings setting)
+        static public AOUIMMData GetRandomIMMData(long time, AOUDataTypes.IMMSettings setting)
         {
             AOUIMMData immData;
 
-            AOUTypes.TimeMsToAOUModelTime(time, out immData.time_min_of_week, out immData.time_ms_of_min);
+            AOUDataTypes.TimeMsToAOUModelTime(time, out immData.time_min_of_week, out immData.time_ms_of_min);
 
             immData.imm_setting_type = (UInt16)setting;
             immData.imm_setting_val = 0;
@@ -233,16 +233,20 @@ namespace DataHandler
         static public long GetElapsedTime(double minResolution)
         {
             if (ts_start == -1)
-                ts_start = DateTime.Now.Ticks; // First time
+                ts_start = 0; // DateTime.Now.Ticks; // First time
 
-            TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start); // Diff ticks
+            // TimeSpan ts = new TimeSpan(DateTime.Now.Ticks - ts_start); // Diff ticks
 
-            return (long)(Math.Round(ts.TotalMilliseconds/minResolution) * minResolution);
+            TimeSpan ts = TimeSpan.FromMilliseconds(ts_start);
+            long ret = ts_start;
+            ts_start += 1000;
+            return ret;
+            // return (long)(Math.Round(ts.TotalMilliseconds/minResolution) * minResolution);
         }
 
         static public Power GetRandomPower(double minResolution)
         {
-            AOUTypes.StateType valState = (AOUTypes.StateType)rnd.Next(1, AOUTypes.NumStates + 1);
+            AOUDataTypes.StateType valState = (AOUDataTypes.StateType)rnd.Next(1, 11);
 
             var power = new Power()
             {

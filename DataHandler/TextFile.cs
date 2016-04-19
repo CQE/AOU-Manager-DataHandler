@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     // Store data from one sensor in one file, named with date, change file every day
     public class TextFile
@@ -33,8 +33,6 @@ namespace DataHandler
         public string GetTextData()
         {
             string text = StrData;
-            StrData = "";
-
             return text;
         }
 

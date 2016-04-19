@@ -9,7 +9,7 @@ using Windows.Storage.Streams;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DataHandler
+namespace DemoPrototype
 {
     public class AOUSerialData: AOUData
     {
