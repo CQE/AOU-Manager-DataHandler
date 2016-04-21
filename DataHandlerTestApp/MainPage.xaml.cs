@@ -392,7 +392,7 @@ namespace DataHandlerTestApp
 
         private void XMLButton_Click(object sender, RoutedEventArgs e)
         {
-            this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
+            // this.textBox.Text = AOURandomData.CreateRandomXML(30, 0, 1000);
         }
 
         // Todo

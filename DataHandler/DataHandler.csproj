@@ -107,7 +107,6 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AOUCalibrate.cs" />
     <Compile Include="AOUData.cs" />
     <Compile Include="AOUFileData.cs" />
     <Compile Include="AOUHelper.cs" />
